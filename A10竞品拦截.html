@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>零跑A10 小红书内容策略分析</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d26;
+    --surface2: #22263a;
+    --border: #2e3248;
+    --accent: #4f8ef7;
+    --accent2: #7c3aed;
+    --warn: #f59e0b;
+    --danger: #ef4444;
+    --success: #10b981;
+    --text: #e2e8f0;
+    --text-muted: #8892a4;
+    --text-dim: #4a5568;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans SC", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    font-size: 14px;
+  }
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+  /* Header */
+  .hero {
+    background: linear-gradient(135deg, #0f1117 0%, #1a1d26 50%, #1e1f3a 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 48px 0 36px;
+  }
+  .hero-badge {
+    display: inline-block;
+    background: rgba(79,142,247,0.15);
+    border: 1px solid rgba(79,142,247,0.3);
+    color: var(--accent);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    border-radius: 4px;
+    margin-bottom: 16px;
+  }
+  .hero h1 {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 10px;
+  }
+  .hero h1 span { color: var(--accent); }
+  .hero-meta { color: var(--text-muted); font-size: 13px; display: flex; gap: 20px; flex-wrap: wrap; }
+  .hero-meta b { color: var(--text); }
+
+  /* Nav */
+  .toc {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 0;
+    position: sticky; top: 0; z-index: 100;
+  }
+  .toc ul { display: flex; gap: 4px; list-style: none; flex-wrap: wrap; }
+  .toc a {
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 12px;
+    padding: 5px 12px;
+    border-radius: 4px;
+    display: block;
+    transition: all 0.15s;
+  }
+  .toc a:hover { color: var(--text); background: var(--surface2); }
+
+  /* Sections */
+  .section {
+    padding: 48px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .section:last-child { border-bottom: none; }
+  .section-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+  .section h2 {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .section-desc {
+    color: var(--text-muted);
+    font-size: 13px;
+    margin-bottom: 28px;
+    max-width: 700px;
+  }
+
+  /* Subsection */
+  .sub-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 14px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .sub-block { margin-bottom: 36px; }
+
+  /* Tables */
+  .table-wrap { overflow-x: auto; margin-bottom: 8px; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  thead tr {
+    background: var(--surface2);
+  }
+  th {
+    text-align: left;
+    padding: 10px 14px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: rgba(255,255,255,0.02); }
+
+  /* Tags/Pills */
+  .tag {
+    display: inline-block;
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .tag-gap { background: rgba(239,68,68,0.15); color: #f87171; border: 1px solid rgba(239,68,68,0.2); }
+  .tag-high { background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.2); }
+  .tag-med { background: rgba(245,158,11,0.15); color: #fbbf24; border: 1px solid rgba(245,158,11,0.2); }
+  .tag-low { background: rgba(100,116,139,0.15); color: #94a3b8; border: 1px solid rgba(100,116,139,0.2); }
+  .tag-inter { background: rgba(79,142,247,0.15); color: #93c5fd; border: 1px solid rgba(79,142,247,0.2); }
+
+  /* Priority list */
+  .priority-list { list-style: none; }
+  .priority-item {
+    display: grid;
+    grid-template-columns: 40px 1fr;
+    gap: 16px;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--border);
+    align-items: start;
+  }
+  .priority-item:last-child { border-bottom: none; }
+  .priority-num {
+    width: 36px; height: 36px;
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; font-weight: 700;
+    flex-shrink: 0;
+  }
+  .num-1 { background: rgba(239,68,68,0.2); color: #f87171; }
+  .num-2 { background: rgba(245,158,11,0.2); color: #fbbf24; }
+  .num-3 { background: rgba(245,158,11,0.2); color: #fbbf24; }
+  .num-4 { background: rgba(79,142,247,0.2); color: #93c5fd; }
+  .num-5 { background: rgba(79,142,247,0.2); color: #93c5fd; }
+  .num-6 { background: rgba(100,116,139,0.2); color: #94a3b8; }
+  .num-7 { background: rgba(100,116,139,0.2); color: #94a3b8; }
+  .num-8 { background: rgba(100,116,139,0.2); color: #94a3b8; }
+  .num-9 { background: rgba(100,116,139,0.2); color: #94a3b8; }
+  .num-10 { background: rgba(100,116,139,0.2); color: #94a3b8; }
+  .priority-content h4 { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+  .priority-content p { color: var(--text-muted); font-size: 13px; line-height: 1.5; }
+  .priority-meta { display: flex; gap: 10px; margin-top: 6px; flex-wrap: wrap; }
+
+  /* Stat cards */
+  .stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 28px; }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+  }
+  .stat-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+  .stat-value { font-size: 22px; font-weight: 700; }
+  .stat-note { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+  .c-red { color: #f87171; }
+  .c-green { color: #34d399; }
+  .c-blue { color: var(--accent); }
+  .c-yellow { color: #fbbf24; }
+
+  /* Insight box */
+  .insight {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 6px;
+    padding: 14px 18px;
+    margin-bottom: 20px;
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+  .insight strong { color: var(--text); }
+
+  /* Appendix */
+  .appendix-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+  .appendix-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+  }
+  .appendix-card h4 { font-size: 13px; font-weight: 600; margin-bottom: 10px; color: var(--text); }
+  .appendix-card .note-list { list-style: none; }
+  .appendix-card .note-item {
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+    display: flex; justify-content: space-between; gap: 8px;
+    align-items: baseline;
+  }
+  .appendix-card .note-item:last-child { border-bottom: none; }
+  .note-title { color: var(--text-muted); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .note-stats { color: var(--text-dim); font-size: 11px; white-space: nowrap; flex-shrink: 0; }
+  .note-stats b { color: var(--accent); }
+
+  .footer {
+    padding: 24px 0;
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 12px;
+    border-top: 1px solid var(--border);
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="container">
+    <div class="hero-badge">小红书内容策略报告</div>
+    <h1>零跑<span>A10</span> 内容缺口与竞品拦截分析</h1>
+    <div class="hero-meta">
+      <span>数据采集：<b>小红书搜索 · 2026年5月</b></span>
+      <span>覆盖车型：<b>A10 / 元UP / 星愿 / 缤果S / MG4 / 极狐T1 / 缤果PLUS / 纳米01</b></span>
+      <span>样本量：<b>160+ 条笔记</b></span>
+    </div>
+  </div>
+</div>
+
+<nav class="toc">
+  <div class="container">
+    <ul>
+      <li><a href="#gap">① 内容缺口诊断</a></li>
+      <li><a href="#intercept">② 竞品内容拦截</a></li>
+      <li><a href="#hesitant">③ 观望用户打动策略</a></li>
+      <li><a href="#priority">④ 执行优先级 TOP10</a></li>
+      <li><a href="#appendix">数据附录</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- ① 内容缺口诊断 -->
+<section class="section" id="gap">
+  <div class="container">
+    <div class="section-label">模块一</div>
+    <h2>内容缺口诊断</h2>
+    <p class="section-desc">通过对比零跑A10与7款竞品在小红书的内容表现，识别A10当前内容矩阵的覆盖盲区与流量缺口。</p>
+
+    <div class="stat-row">
+      <div class="stat-card">
+        <div class="stat-label">A10 最高点赞笔记</div>
+        <div class="stat-value c-blue">825</div>
+        <div class="stat-note">试驾内容·赞/309收/151评</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">A10 最高评论笔记</div>
+        <div class="stat-value c-yellow">343</div>
+        <div class="stat-note">吐槽贴·评论/仅65赞</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">竞品最高点赞对标</div>
+        <div class="stat-value c-red">2881</div>
+        <div class="stat-note">纳米01女生选车·赞/1461收</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">竞品最高分享对标</div>
+        <div class="stat-value c-red">2346</div>
+        <div class="stat-note">缤果S体制内话题·分享</div>
+      </div>
+    </div>
+
+    <div class="insight">
+      <strong>核心信号：</strong>A10的吐槽贴评论量（343、327）远高于点赞量，说明大量用户进入讨论但缺乏"值得收藏"的答案型内容。竞品内容可跑出赞/收藏破千的格式（配置对比图、女生选车、打工人定位），A10均无对应覆盖。
+    </div>
+
+    <div class="sub-block">
+      <div class="sub-title">已识别缺口 · 5项</div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>缺口类型</th>
+              <th>缺口描述</th>
+              <th>竞品已有的验证案例</th>
+              <th>竞品数据</th>
+              <th>优先级</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="tag tag-gap">配置选择指南</span></td>
+              <td>A10无高互动的"一图看懂配置差异"内容，用户在评论区反复问配置怎么选</td>
+              <td>极狐T1"一图看懂T1各配置差异"<br>五菱缤果S"一张图看懂缤果S各配置差异"</td>
+              <td>T1: 925赞/295收<br>缤果S: 1555赞/81评</td>
+              <td><span class="tag tag-high">最高</span></td>
+            </tr>
+            <tr>
+              <td><span class="tag tag-gap">长期真实用车评测</span></td>
+              <td>A10最长评测仅"提车两周"，缺乏2个月以上的深度评测，无法让观望用户建立信任</td>
+              <td>星愿"开了两个月说八个最大缺点"<br>纳米01"提车半年，有问题尽管问"</td>
+              <td>星愿: 1509赞/448评/669收<br>纳米01: 94赞/99评</td>
+              <td><span class="tag tag-high">最高</span></td>
+            </tr>
+            <tr>
+              <td><span class="tag tag-gap">垂直人群定向内容</span></td>
+              <td>A10无"打工人""女生""体制内"等人群标签内容，竞品通过精准人群标签实现破圈传播</td>
+              <td>纳米01"10万左右适合女生的小车"<br>缤果S"体制内开这个车可以吗"<br>MG4"打工人第一辆车选哪个"</td>
+              <td>纳米01: 2881赞/1073分享/1461收<br>缤果S: 2254赞/2346分享<br>MG4: 1588赞/286评/781收</td>
+              <td><span class="tag tag-high">最高</span></td>
+            </tr>
+            <tr>
+              <td><span class="tag tag-gap">主动缺点回应内容</span></td>
+              <td>A10吐槽帖评论极高(343、327)，但无对应"优缺点全说""X个真实缺点"内容，负面讨论无法被正向引流</td>
+              <td>元UP"元UP缺点合集"<br>星愿"两个月缺点合集"</td>
+              <td>元UP: 475赞/375评<br>星愿: 1509赞/669收</td>
+              <td><span class="tag tag-med">中</span></td>
+            </tr>
+            <tr>
+              <td><span class="tag tag-gap">结构化对比内容</span></td>
+              <td>A10缺乏"A10 vs ___"的跨品牌结构对比笔记，无法截获用户选车决策阶段的搜索流量</td>
+              <td>极狐T1"MG4/极狐T1配置多能打"<br>"8万纯电代步小车怎么选"</td>
+              <td>T1: 287赞/126收<br>选车指南: 1140赞/655收</td>
+              <td><span class="tag tag-med">中</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="sub-block">
+      <div class="sub-title">A10 现有内容表现分析</div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>内容类型</th>
+              <th>代表笔记</th>
+              <th>赞/评/收</th>
+              <th>评论:点赞比</th>
+              <th>结论</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>试驾体验</td>
+              <td>"试驾零跑A10"</td>
+              <td>825赞 / 151评 / 309收</td>
+              <td>0.18</td>
+              <td><span class="tag tag-high">强</span> 感性内容表现最佳</td>
+            </tr>
+            <tr>
+              <td>情感向吐槽</td>
+              <td>"又爱又恨A10吐槽贴"</td>
+              <td>387赞 / 327评 / 147收</td>
+              <td>0.84</td>
+              <td><span class="tag tag-inter">争议</span> 高讨论度说明痛点共鸣强</td>
+            </tr>
+            <tr>
+              <td>纯吐槽（问题导向）</td>
+              <td>"A10吐槽第一弹"</td>
+              <td>65赞 / 343评 / —</td>
+              <td>5.27</td>
+              <td><span class="tag tag-gap">警示</span> 极高评低赞=问题无解答</td>
+            </tr>
+            <tr>
+              <td>价值讨论</td>
+              <td>"A10到底值不值得买"</td>
+              <td>191赞 / 260评 / 85收</td>
+              <td>1.36</td>
+              <td><span class="tag tag-inter">争议</span> 决策疑虑强，无定论内容</td>
+            </tr>
+            <tr>
+              <td>正向外观</td>
+              <td>"小东西还挺别致"</td>
+              <td>231赞 / 114评 / —</td>
+              <td>0.49</td>
+              <td><span class="tag tag-high">良好</span> 颜值话题有基础认可</td>
+            </tr>
+            <tr>
+              <td>短期用车</td>
+              <td>"提车两周不吹不黑"</td>
+              <td>65赞 / 137评 / —</td>
+              <td>2.11</td>
+              <td><span class="tag tag-gap">弱</span> 用车时间太短，说服力不足</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ② 竞品内容拦截 -->
+<section class="section" id="intercept">
+  <div class="container">
+    <div class="section-label">模块二</div>
+    <h2>竞品内容拦截策略</h2>
+    <p class="section-desc">识别各竞品在小红书的高互动内容，提炼其吸引用户的核心话题，并设计A10的"同维度拦截"内容策略（仅拦截与A10存在实质竞争维度的话题）。</p>
+
+    <div class="insight">
+      <strong>拦截原则：</strong>仅拦截"同维度"话题——A10与该竞品价位段相似（7-10万）、目标人群重叠、且A10在该维度有实质优势或差异化切入点时才纳入拦截。不做无依据的优势宣称。
+    </div>
+
+    <div class="sub-block">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>竞品</th>
+              <th>竞品热点词/话题</th>
+              <th>竞品数据</th>
+              <th>拦截角度</th>
+              <th>A10切入点</th>
+              <th>内容形式建议</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td rowspan="2"><b>比亚迪元UP</b></td>
+              <td>"元UP缺点合集"——缺点讨论极度活跃</td>
+              <td>475赞/375评</td>
+              <td>同维度拦截——缺点正面PK</td>
+              <td>对比两车真实缺点，不回避A10问题，用客观性建立信任</td>
+              <td>图文："A10 vs 元UP 十大真实缺点对比，我都说"</td>
+            </tr>
+            <tr>
+              <td>"元UP提车4个月小结"——长期真实反馈</td>
+              <td>652赞/193评</td>
+              <td>同维度拦截——用车时长叙事</td>
+              <td>做A10同等时长的真实车主故事，数据+情感双维度</td>
+              <td>视频/图文："A10提车4个月，我的不后悔报告"</td>
+            </tr>
+            <tr>
+              <td rowspan="3"><b>吉利银河星愿</b></td>
+              <td>"星愿这么脆皮为什么还是销量第一"——安全性质疑</td>
+              <td>1378评/522赞/212收</td>
+              <td>同维度拦截——安全结构PK</td>
+              <td>用A10车身结构/碰撞实测对比，抓取"在乎安全"的用户</td>
+              <td>图文："同价位车身结构大比拼，谁更安全"</td>
+            </tr>
+            <tr>
+              <td>"开两个月最大缺点"——缺点内容收藏超高</td>
+              <td>1509赞/448评/669收</td>
+              <td>搜索截流——同格式发布</td>
+              <td>同格式发布A10缺点长评，抓取搜索"小车缺点"的用户</td>
+              <td>图文："A10开了X个月，说说最让我抓狂的几个问题"</td>
+            </tr>
+            <tr>
+              <td>"到底谁能拒绝吉利星愿"——超高分享，选车参考</td>
+              <td>2202赞/1647分享</td>
+              <td>同维度拦截——反向话题</td>
+              <td>借势话题，做"星愿vs A10，你是哪种类型"选择题内容</td>
+              <td>互动图文："星愿和A10选哪个？我帮你分析用车场景"</td>
+            </tr>
+            <tr>
+              <td rowspan="2"><b>五菱缤果S</b></td>
+              <td>"体制内开这个车可以吗"——阶层/社会认可话题</td>
+              <td>2254赞/2346分享</td>
+              <td>同维度拦截——职场身份话题</td>
+              <td>制造A10的"职场身份认可"叙事，定位同类小白领用车</td>
+              <td>图文："甲方爸爸开零跑A10去谈判，没被笑话"</td>
+            </tr>
+            <tr>
+              <td>"一张图看懂缤果S各配置差异"——配置信息高收藏</td>
+              <td>1555赞/81评</td>
+              <td>搜索截流——同格式</td>
+              <td>做A10配置对比图，覆盖"A10怎么选"的搜索流量</td>
+              <td>图文："一张图看懂零跑A10各版本，到底选哪个"</td>
+            </tr>
+            <tr>
+              <td rowspan="2"><b>名爵MG4</b></td>
+              <td>"打工人第一辆车选哪个好"——精准人群标签</td>
+              <td>1588赞/286评/781收</td>
+              <td>同维度拦截——打工人定位</td>
+              <td>A10同价位、同打工人目标群体，做"打工人开A10一年"叙事</td>
+              <td>图文/视频："打工人的第一辆纯电，我选了零跑A10"</td>
+            </tr>
+            <tr>
+              <td>"MG4你们都选哪个版本"——选配讨论高分享</td>
+              <td>768赞/238评/1832分享</td>
+              <td>同维度拦截——选配讨论</td>
+              <td>发起A10选配互动话题，引导用户参与讨论</td>
+              <td>互动图文："零跑A10选哪个版本最值？评论区来投票"</td>
+            </tr>
+            <tr>
+              <td rowspan="2"><b>极狐T1</b></td>
+              <td>"一图看懂极狐T1配置差异"——信息型高收藏</td>
+              <td>925赞/295收</td>
+              <td>搜索截流——配置图</td>
+              <td>A10同级竞争，用同格式配置差异图截获对比搜索用户</td>
+              <td>图文："零跑A10 vs 极狐T1，同价位你会怎么选"</td>
+            </tr>
+            <tr>
+              <td>"8万纯电代步小车该怎么选"——选购指南超高收藏</td>
+              <td>1140赞/655收</td>
+              <td>同维度拦截——价位段导流</td>
+              <td>做A10参与的8-10万级选车指南，覆盖价位段搜索流量</td>
+              <td>图文："8万纯电怎么选？A10/T1/缤果S/星愿横向对比"</td>
+            </tr>
+            <tr>
+              <td><b>五菱缤果PLUS</b></td>
+              <td>"缤果三代对比"——产品线梳理高收藏</td>
+              <td>677赞/310收</td>
+              <td>借力拦截——进入对比视野</td>
+              <td>在"纠结缤果S还是PLUS"的流量中，植入A10作为第三选项</td>
+              <td>图文："纠结缤果S/PLUS/A10？一次帮你说清楚"</td>
+            </tr>
+            <tr>
+              <td rowspan="2"><b>东风纳米01</b></td>
+              <td>"10万适合女生的小车"——女生选车最高互动</td>
+              <td>2881赞/1073分享/1461收</td>
+              <td>同维度拦截——女生选车话题</td>
+              <td>A10同价位，颜值话题有基础，做专门女生向内容</td>
+              <td>图文："女生第一辆纯电不踩坑指南（含A10实测）"</td>
+            </tr>
+            <tr>
+              <td>"5万高颜值代步电动汽车"——高颜值代步定位</td>
+              <td>1161赞/525分享/465收</td>
+              <td>同维度拦截——颜值代步话题</td>
+              <td>强化A10颜值叙事，和纳米01争夺"高颜值代步"心智</td>
+              <td>图文/视频："街拍感最强的代步小车，看完你懂的"</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ③ 观望用户打动策略 -->
+<section class="section" id="hesitant">
+  <div class="container">
+    <div class="section-label">模块三</div>
+    <h2>观望用户打动策略</h2>
+    <p class="section-desc">根据A10评论区高频疑虑信号，设计针对性的内容转化路径，将"评论但不收藏"的犹豫用户推向决策。</p>
+
+    <div class="insight">
+      <strong>用户心理信号：</strong>A10评论区呈现明显的"高评低赞"特征（吐槽贴343评/65赞；值不值贴260评/191赞），说明用户带着问题来、但没有找到答案后离开，缺乏定心内容。
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>疑虑类型</th>
+            <th>信号来源</th>
+            <th>内容切入角度</th>
+            <th>推荐表达方式</th>
+            <th>参考选题</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><b>值不值 / 性价比</b></td>
+            <td>"A10到底值不值得买" (260评/191赞/85收)；"又爱又恨吐槽贴"</td>
+            <td>配置密度可视化：同价位逐项配置有无对比，让"值"可量化</td>
+            <td>清单式图文：配置逐项列表 + 竞品空白对比</td>
+            <td>"9万买到这些，竞品没有：A10配置清单"</td>
+          </tr>
+          <tr>
+            <td><b>品牌信任度</b></td>
+            <td>"A10吐槽第一弹"极高评论(343评)暗示大量持观望态度的新用户</td>
+            <td>"小品牌靠谱吗"——用真实车主长期反馈替代品牌叙事</td>
+            <td>提车N个月真实使用Vlog / 图文，强调零跑销量/售后</td>
+            <td>"零跑A10提车3个月，讲讲我最担心的几件事后来怎样了"</td>
+          </tr>
+          <tr>
+            <td><b>续航/充电焦虑</b></td>
+            <td>吐槽贴高评论中有续航疑虑（参考行业规律）；对比搜索流量存在</td>
+            <td>用实测数据具象化：城区/高速/开空调三场景实测，打破续航缩水疑虑</td>
+            <td>视频：同一路线不同工况续航实测，用时间和里程说话</td>
+            <td>"A10真实续航测试：高速/城区/空调全开三种场景"</td>
+          </tr>
+          <tr>
+            <td><b>又爱又恨的纠结情绪</b></td>
+            <td>"又爱又恨A10吐槽贴" (327评/387赞/147收) ——高赞+高评说明情感共鸣强</td>
+            <td>借势话题，输出"缺点我都知道，但我还是选了A10"的决策故事</td>
+            <td>心路历程帖：列出缺点 → 但这些缺点对我来说不是问题 → 选它的理由</td>
+            <td>"又爱又恨A10，但我最终还是下单了，说说为什么"</td>
+          </tr>
+          <tr>
+            <td><b>竞品更好？选谁</b></td>
+            <td>极狐T1"最终定了T1"(518赞/152收)、星愿高分享(2202赞)说明用户在多车之间摇摆</td>
+            <td>做"A10适合哪种人"的场景化分类，帮用户快速对号入座</td>
+            <td>决策辅助图文：按用车场景/预算/人群给出推荐结论</td>
+            <td>"这几种人适合买A10，这几种人不适合（含5款竞品对比）"</td>
+          </tr>
+          <tr>
+            <td><b>外观够不够出门</b></td>
+            <td>"小东西还挺别致"(231赞/114评) 说明外观话题有认同基础</td>
+            <td>强化颜值叙事，做街拍/日常场景内容，制造"开出去不low"的认知</td>
+            <td>日常出行Vlog / 街拍图文，用场景图替代产品图</td>
+            <td>"开A10去了这些地方，没有一次觉得它配不上"</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ④ 执行优先级 TOP10 -->
+<section class="section" id="priority">
+  <div class="container">
+    <div class="section-label">模块四</div>
+    <h2>执行优先级 TOP10</h2>
+    <p class="section-desc">综合「内容缺口填补」+ 「竞品拦截ROI」+ 「用户决策节点」三维评估，排定内容执行优先级。搜索优化类优先于热点追踪类。</p>
+
+    <ul class="priority-list">
+      <li class="priority-item">
+        <div class="priority-num num-1">1</div>
+        <div class="priority-content">
+          <h4>一张图看懂零跑A10配置差异（选购指南）</h4>
+          <p>填补最大内容缺口。极狐T1同格式925赞/295收，缤果S同格式1555赞，此类内容属常青搜索内容，发布后长期截流。搜索词覆盖"零跑A10哪个版本好""A10怎么选"。</p>
+          <div class="priority-meta">
+            <span class="tag tag-high">搜索优化</span>
+            <span class="tag tag-inter">图文 · 清单式</span>
+            <span class="tag tag-gap">填补缺口①</span>
+          </div>
+        </div>
+      </li>
+      <li class="priority-item">
+        <div class="priority-num num-2">2</div>
+        <div class="priority-content">
+          <h4>打工人第一辆纯电，我选了零跑A10</h4>
+          <p>拦截MG4/纳米01"打工人"话题流量，同时覆盖A10目标用户画像（城市打工人、通勤代步）。MG4同类内容1588赞/781收。具备人群精准+高传播双属性。</p>
+          <div class="priority-meta">
+            <span class="tag tag-high">搜索优化</span>
+            <span class="tag tag-inter">图文/视频</span>
+            <span class="tag tag-gap">拦截MG4/纳米01</span>
+          </div>
+        </div>
+      </li>
+      <li class="priority-item">
+        <div class="priority-num num-3">3</div>
+        <div class="priority-content">
+          <h4>女生选纯电小车不踩坑指南（含A10实测）</h4>
+          <p>拦截纳米01"女生小车"话题（2881赞/1461收）。A10颜值话题有基础认可，作为答案型内容收录进选车指南，在高流量话题中建立品牌曝光。</p>
+          <div class="priority-meta">
+            <span class="tag tag-high">搜索优化</span>
+            <span class="tag tag-inter">图文 · 清单式</span>
+            <span class="tag tag-gap">拦截纳米01</span>
+          </div>
+        </div>
+      </li>
+      <li class="priority-item">
+        <div class="priority-num num-4">4</div>
+        <div class="priority-content">
+          <h4>A10提车3个月，讲讲我最担心的几件事后来怎样了</h4>
+          <p>填补长期用车评测缺口。直接回应"值不值""靠不靠谱"疑虑，格式借鉴星愿同类内容（1509赞/669收）。长期真实反馈是转化观望用户效率最高的内容类型。</p>
+          <div class="priority-meta">
+            <span class="tag tag-med">信任建立</span>
+            <span class="tag tag-inter">图文/视频</span>
+            <span class="tag tag-gap">填补缺口②</span>
+          </div>
+        </div>
+      </li>
+      <li class="priority-item">
+        <div class="priority-num num-5">5</div>
+        <div class="priority-content">
+          <h4>8万纯电怎么选？A10/T1/星愿/MG4 四车横向对比</h4>
+          <p>覆盖价位段选车搜索流量（对标"8万纯电代步小车怎么选"1140赞/655收）。结构化对比内容收藏率高、搜索长尾覆盖广，是A10进入用户决策短名单的最高效路径。</p>
+          <div class="priority-meta">
+            <span class="tag tag-high">搜索优化</span>
+            <span class="tag tag-inter">图文 · 对比表格式</span>
+            <span class="tag tag-gap">多竞品拦截</span>
+          </div>
+        </div>
+      </li>
+      <li class="priority-item">
+        <div class="priority-num num-6">6</div>
+        <div class="priority-content">
+          <h4>A10 vs 元UP 十大真实缺点，我都说</h4>
+          <p>元UP"缺点合集"475赞/375评，说明目标人群对真实缺点讨论需求极强。A10做同类内容可截获"元UP缺点"搜索流量，同时用"主动说缺点"建立信任感。</p>
+          <div class="priority-meta">
+            <span class="tag tag-med">信任建立</span>
+            <span class="tag tag-inter">图文 · 缺点清单</span>
+            <span class="tag tag-gap">拦截元UP</span>
+          </div>
+        </div>
+      </li>
+      <li class="priority-item">
+        <div class="priority-num num-7">7</div>
+        <div class="priority-content">
+          <h4>同价位安全性怎么选：A10 vs 星愿碰撞对比</h4>
+          <p>星愿安全性话题1378评/522赞，用户对"小车安全性"高度敏感。A10做安全主题内容可截获此话题流量，并在用户决策时建立安全维度的竞争优势认知。</p>
+          <div class="priority-meta">
+            <span class="tag tag-med">热点追踪</span>
+            <span class="tag tag-inter">图文 · 数据对比</span>
+            <span class="tag tag-gap">拦截星愿</span>
+          </div>
+        </div>
+      </li>
+      <li class="priority-item">
+        <div class="priority-num num-8">8</div>
+        <div class="priority-content">
+          <h4>又爱又恨A10，但我最终还是下单了</h4>
+          <p>直接承接"又爱又恨A10"(387赞/327评)的高讨论热度，用"决策故事"格式将负面情绪转化为正向转化。该类内容在A10现有基础上直接发力，ROI高。</p>
+          <div class="priority-meta">
+            <span class="tag tag-med">情感转化</span>
+            <span class="tag tag-inter">图文 · 心路历程</span>
+            <span class="tag tag-gap">观望用户转化</span>
+          </div>
+        </div>
+      </li>
+      <li class="priority-item">
+        <div class="priority-num num-9">9</div>
+        <div class="priority-content">
+          <h4>上班族开零跑A10，同事说了什么</h4>
+          <p>仿照缤果S"体制内开这个车可以吗"（2254赞/2346分享）的社会认可叙事格式，测试A10在职场场景的话题潜力。分享型内容传播路径强，适合创造破圈素材。</p>
+          <div class="priority-meta">
+            <span class="tag tag-low">热点追踪</span>
+            <span class="tag tag-inter">图文/视频 · 身份叙事</span>
+            <span class="tag tag-gap">拦截缤果S</span>
+          </div>
+        </div>
+      </li>
+      <li class="priority-item">
+        <div class="priority-num num-10">10</div>
+        <div class="priority-content">
+          <h4>A10真实续航测试：高速/城区/开空调三场景</h4>
+          <p>常青型搜索内容，覆盖"A10续航怎么样""A10开空调续航"等高意向长尾词。星愿安全气囊事故贴（1091赞）说明用户对真实表现的负面疑虑强，此内容正面回应。</p>
+          <div class="priority-meta">
+            <span class="tag tag-low">搜索优化</span>
+            <span class="tag tag-inter">视频/图文 · 数据实测</span>
+            <span class="tag tag-gap">观望用户转化</span>
+          </div>
+        </div>
+      </li>
+    </ul>
+  </div>
+</section>
+
+<!-- 数据附录 -->
+<section class="section" id="appendix">
+  <div class="container">
+    <div class="section-label">附录</div>
+    <h2>原始数据 · 各品牌代表笔记</h2>
+    <p class="section-desc">以下为各品牌在小红书搜索结果中的高互动笔记，作为本报告分析依据。数据采集时间：2026年5月21日。</p>
+
+    <div class="appendix-grid">
+      <div class="appendix-card">
+        <h4>零跑 A10</h4>
+        <ul class="note-list">
+          <li class="note-item"><span class="note-title">试驾零跑A10</span><span class="note-stats"><b>825</b>赞·309收·151评</span></li>
+          <li class="note-item"><span class="note-title">又爱又恨A10吐槽贴</span><span class="note-stats"><b>387</b>赞·147收·327评</span></li>
+          <li class="note-item"><span class="note-title">小东西还挺别致</span><span class="note-stats"><b>231</b>赞·114评</span></li>
+          <li class="note-item"><span class="note-title">A10到底值不值得买</span><span class="note-stats"><b>191</b>赞·85收·260评</span></li>
+          <li class="note-item"><span class="note-title">A10吐槽第一弹</span><span class="note-stats">65赞·<b>343</b>评</span></li>
+          <li class="note-item"><span class="note-title">提车两周不吹不黑</span><span class="note-stats">65赞·137评</span></li>
+        </ul>
+      </div>
+
+      <div class="appendix-card">
+        <h4>比亚迪 元UP</h4>
+        <ul class="note-list">
+          <li class="note-item"><span class="note-title">元UP提车4个月小结</span><span class="note-stats"><b>652</b>赞·193评</span></li>
+          <li class="note-item"><span class="note-title">元UP缺点合集</span><span class="note-stats"><b>475</b>赞·375评</span></li>
+          <li class="note-item"><span class="note-title">（匿名讨论帖）</span><span class="note-stats">337赞·200收·810评</span></li>
+          <li class="note-item"><span class="note-title">元UP车主反馈</span><span class="note-stats">89赞·384评</span></li>
+        </ul>
+      </div>
+
+      <div class="appendix-card">
+        <h4>吉利银河 星愿</h4>
+        <ul class="note-list">
+          <li class="note-item"><span class="note-title">到底谁能拒绝吉利星愿</span><span class="note-stats"><b>2202</b>赞·1647分享</span></li>
+          <li class="note-item"><span class="note-title">提车三个月只说真话</span><span class="note-stats"><b>2267</b>赞·929收·279评</span></li>
+          <li class="note-item"><span class="note-title">脆皮为什么还销量第一</span><span class="note-stats">522赞·212收·1378评</span></li>
+          <li class="note-item"><span class="note-title">两个月说八个最大缺点</span><span class="note-stats">1509赞·<b>669收</b>·448评</span></li>
+          <li class="note-item"><span class="note-title">安全气囊准备什么时候爆</span><span class="note-stats">1091赞·406收·286评</span></li>
+        </ul>
+      </div>
+
+      <div class="appendix-card">
+        <h4>五菱 缤果S</h4>
+        <ul class="note-list">
+          <li class="note-item"><span class="note-title">体制内开这个车可以吗</span><span class="note-stats"><b>2254</b>赞·<b>2346</b>分享·834收</span></li>
+          <li class="note-item"><span class="note-title">一张图看懂缤果S各配置差异</span><span class="note-stats"><b>1555</b>赞·81评</span></li>
+          <li class="note-item"><span class="note-title">缤果S入手不亏</span><span class="note-stats">637赞·154评</span></li>
+        </ul>
+      </div>
+
+      <div class="appendix-card">
+        <h4>名爵 MG4</h4>
+        <ul class="note-list">
+          <li class="note-item"><span class="note-title">打工人第一辆车选哪个好</span><span class="note-stats"><b>1588</b>赞·781收·286评</span></li>
+          <li class="note-item"><span class="note-title">MG4你们都选哪个版本</span><span class="note-stats">768赞·<b>1832</b>分享·238评</span></li>
+          <li class="note-item"><span class="note-title">试驾完名爵MG4，纠结了</span><span class="note-stats">781赞·327收·210评</span></li>
+          <li class="note-item"><span class="note-title">拿本八天提MG4翻了</span><span class="note-stats">207赞·403评</span></li>
+        </ul>
+      </div>
+
+      <div class="appendix-card">
+        <h4>极狐 T1</h4>
+        <ul class="note-list">
+          <li class="note-item"><span class="note-title">8万纯电代步小车怎么选</span><span class="note-stats"><b>1140</b>赞·<b>655收</b>·64评</span></li>
+          <li class="note-item"><span class="note-title">一图看懂极狐T1各配置差异</span><span class="note-stats">925赞·295收·43评</span></li>
+          <li class="note-item"><span class="note-title">最终还是定了极狐T1</span><span class="note-stats">518赞·152收·84评</span></li>
+          <li class="note-item"><span class="note-title">教授试极狐T1，略带惊喜</span><span class="note-stats">461赞·119收·112评</span></li>
+          <li class="note-item"><span class="note-title">T1用车10天，缺点优点都有</span><span class="note-stats">497赞·182收·225评</span></li>
+        </ul>
+      </div>
+
+      <div class="appendix-card">
+        <h4>五菱 缤果PLUS</h4>
+        <ul class="note-list">
+          <li class="note-item"><span class="note-title">五菱缤果suv五座</span><span class="note-stats"><b>1023</b>赞·249收·325评</span></li>
+          <li class="note-item"><span class="note-title">缤果三代对比</span><span class="note-stats">677赞·310收·87评</span></li>
+          <li class="note-item"><span class="note-title">缤果plus提车两个月感受</span><span class="note-stats">361赞·101收·81评</span></li>
+          <li class="note-item"><span class="note-title">不会只有我买缤果plus吧</span><span class="note-stats">81赞·19收·146评</span></li>
+        </ul>
+      </div>
+
+      <div class="appendix-card">
+        <h4>东风纳米 01</h4>
+        <ul class="note-list">
+          <li class="note-item"><span class="note-title">10万左右适合女生的小车推荐</span><span class="note-stats"><b>2881</b>赞·1073分享·<b>1461</b>收</span></li>
+          <li class="note-item"><span class="note-title">5万拿下高颜值代步电动汽车</span><span class="note-stats">1161赞·525分享·465收</span></li>
+          <li class="note-item"><span class="note-title">花1w+提小纳米回家啦</span><span class="note-stats">482赞·194分享·139收</span></li>
+          <li class="note-item"><span class="note-title">预算8万买代步小车</span><span class="note-stats">450赞·347分享·228收</span></li>
+          <li class="note-item"><span class="note-title">提车半年，有问题尽管问</span><span class="note-stats">94赞·34收·99评</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="footer">
+  <div class="container">
+    数据来源：小红书搜索 · 采集时间：2026-05-21 · 样本量：160+ 条笔记 · 覆盖8款车型
+  </div>
+</div>
+
+</body>
+</html>

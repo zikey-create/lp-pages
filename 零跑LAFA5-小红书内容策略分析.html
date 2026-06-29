@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>零跑LAFA5 小红书内容策略分析</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d26;
+    --surface2: #22263a;
+    --border: #2e3248;
+    --accent: #4f8ef7;
+    --accent2: #7c3aed;
+    --warn: #f59e0b;
+    --danger: #ef4444;
+    --success: #10b981;
+    --text: #e2e8f0;
+    --text-muted: #8892a4;
+    --text-dim: #4a5568;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans SC", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    font-size: 14px;
+  }
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+  /* Header */
+  .hero {
+    background: linear-gradient(135deg, #0f1117 0%, #1a1d26 50%, #1e1f3a 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 48px 0 36px;
+  }
+  .hero-badge {
+    display: inline-block;
+    background: rgba(79,142,247,0.15);
+    border: 1px solid rgba(79,142,247,0.3);
+    color: var(--accent);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    border-radius: 4px;
+    margin-bottom: 16px;
+  }
+  .hero h1 {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 10px;
+  }
+  .hero h1 span { color: var(--accent); }
+  .hero-meta { color: var(--text-muted); font-size: 13px; display: flex; gap: 20px; flex-wrap: wrap; }
+  .hero-meta b { color: var(--text); }
+
+  /* Nav */
+  .toc {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 0;
+    position: sticky; top: 0; z-index: 100;
+  }
+  .toc ul { display: flex; gap: 4px; list-style: none; flex-wrap: wrap; }
+  .toc a {
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 12px;
+    padding: 5px 12px;
+    border-radius: 4px;
+    display: block;
+    transition: all 0.15s;
+  }
+  .toc a:hover { color: var(--text); background: var(--surface2); }
+
+  /* Sections */
+  .section {
+    padding: 48px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .section:last-child { border-bottom: none; }
+  .section-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+  .section h2 {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .section-desc {
+    color: var(--text-muted);
+    font-size: 13px;
+    margin-bottom: 28px;
+    max-width: 700px;
+  }
+
+  /* Subsection */
+  .sub-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 14px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .sub-block { margin-bottom: 36px; }
+
+  /* Tables */
+  .table-wrap { overflow-x: auto; margin-bottom: 8px; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  thead tr {
+    background: var(--surface2);
+  }
+  th {
+    text-align: left;
+    padding: 10px 14px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: rgba(255,255,255,0.02); }
+
+  /* Tags/Pills */
+  .tag {
+    display: inline-block;
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .tag-gap { background: rgba(239,68,68,0.15); color: #f87171; border: 1px solid rgba(239,68,68,0.2); }
+  .tag-high { background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.2); }
+  .tag-med { background: rgba(245,158,11,0.15); color: #fbbf24; border: 1px solid rgba(245,158,11,0.2); }
+  .tag-low { background: rgba(100,116,139,0.15); color: #94a3b8; border: 1px solid rgba(100,116,139,0.2); }
+  .tag-inter { background: rgba(79,142,247,0.15); color: #93c5fd; border: 1px solid rgba(79,142,247,0.2); }
+
+  /* Priority list */
+  .priority-list { list-style: none; }
+  .priority-item {
+    display: grid;
+    grid-template-columns: 40px 1fr;
+    gap: 16px;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--border);
+    align-items: start;
+  }
+  .priority-item:last-child { border-bottom: none; }
+  .priority-num {
+    width: 36px; height: 36px;
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; font-weight: 700;
+    flex-shrink: 0;
+  }
+  .num-1 { background: rgba(239,68,68,0.2); color: #f87171; }
+  .num-2 { background: rgba(245,158,11,0.2); color: #fbbf24; }
+  .num-3 { background: rgba(245,158,11,0.2); color: #fbbf24; }
+  .num-4 { background: rgba(79,142,247,0.2); color: #93c5fd; }
+  .num-5 { background: rgba(79,142,247,0.2); color: #93c5fd; }
+  .num-6 { background: rgba(100,116,139,0.2); color: #94a3b8; }
+  .num-7 { background: rgba(100,116,139,0.2); color: #94a3b8; }
+  .num-8 { background: rgba(100,116,139,0.2); color: #94a3b8; }
+  .num-9 { background: rgba(100,116,139,0.2); color: #94a3b8; }
+  .num-10 { background: rgba(100,116,139,0.2); color: #94a3b8; }
+  .priority-content h4 { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+  .priority-content p { color: var(--text-muted); font-size: 13px; line-height: 1.5; }
+  .priority-meta { display: flex; gap: 10px; margin-top: 6px; flex-wrap: wrap; }
+
+  /* Stat cards */
+  .stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 28px; }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+  }
+  .stat-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+  .stat-value { font-size: 22px; font-weight: 700; }
+  .stat-note { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+  .c-red { color: #f87171; }
+  .c-green { color: #34d399; }
+  .c-blue { color: var(--accent); }
+  .c-yellow { color: #fbbf24; }
+
+  /* Insight box */
+  .insight {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 6px;
+    padding: 14px 18px;
+    margin-bottom: 20px;
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+  .insight strong { color: var(--text); }
+  .insight-warn {
+    border-left-color: var(--warn);
+  }
+  .insight-danger {
+    border-left-color: var(--danger);
+  }
+  .insight-success {
+    border-left-color: var(--success);
+  }
+
+  /* Appendix */
+  .appendix-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+  .appendix-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+  }
+  .appendix-card h4 { font-size: 13px; font-weight: 600; margin-bottom: 10px; color: var(--text); }
+  .appendix-card .note-list { list-style: none; }
+  .appendix-card .note-item {
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+    display: flex; justify-content: space-between; gap: 8px;
+    align-items: baseline;
+  }
+  .appendix-card .note-item:last-child { border-bottom: none; }
+  .note-title { color: var(--text-muted); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .note-stats { color: var(--text-dim); font-size: 11px; white-space: nowrap; flex-shrink: 0; }
+  .note-stats b { color: var(--accent); }
+
+  .footer {
+    padding: 24px 0;
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 12px;
+    border-top: 1px solid var(--border);
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="container">
+    <div class="hero-badge">小红书内容策略报告</div>
+    <h1>零跑<span>LAFA5</span> 内容缺口与竞品拦截分析</h1>
+    <div class="hero-meta">
+      <span>数据采集：<b>小红书搜索 · 2026年5月</b></span>
+      <span>覆盖车型：<b>LAFA5 / 海豚 / Mona03 / 极狐T1 / 欧拉好猫 / AION i60 / 深蓝S05 / 深蓝L06 / 欧拉5 / 极狐αT5 / 高尔夫电动</b></span>
+      <span>样本量：<b>200+ 条笔记</b></span>
+    </div>
+  </div>
+</div>
+
+<nav class="toc">
+  <div class="container">
+    <ul>
+      <li><a href="#gap">① 内容缺口诊断</a></li>
+      <li><a href="#intercept">② 竞品内容拦截</a></li>
+      <li><a href="#hesitant">③ 观望用户打动策略</a></li>
+      <li><a href="#priority">④ 执行优先级 TOP10</a></li>
+      <li><a href="#appendix">数据附录</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- ① 内容缺口诊断 -->
+<section class="section" id="gap">
+  <div class="container">
+    <div class="section-label">模块一</div>
+    <h2>内容缺口诊断</h2>
+    <p class="section-desc">对比零跑LAFA5与10款竞品在小红书的内容表现，识别LAFA5当前内容矩阵的覆盖盲区与流量缺口。</p>
+
+    <div class="stat-row">
+      <div class="stat-card">
+        <div class="stat-label">LAFA5 最高分享笔记</div>
+        <div class="stat-value c-blue">3130</div>
+        <div class="stat-note">颜值帖·"最帅的一台零跑"</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">LAFA5 最高互动帖</div>
+        <div class="stat-value c-green">491</div>
+        <div class="stat-note">评论数·提车两周优缺点</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">竞品最高收藏对标</div>
+        <div class="stat-value c-red">3557</div>
+        <div class="stat-note">海豚按键说明指南·超高收藏</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">竞品最高评论对标</div>
+        <div class="stat-value c-red">1739</div>
+        <div class="stat-note">海豚生锈帖·质量负面讨论</div>
+      </div>
+    </div>
+
+    <div class="insight">
+      <strong>核心信号：</strong>LAFA5 颜值话题的分享量（3130次）远超点赞量（1105次），说明用户愿意转发颜值内容但内心认同感尚不完整。提车优缺点帖评论量（491评）高于赞量，说明观望用户正在利用评论区"集体求证"，但平台上缺乏系统性的答案型内容（类比海豚3557收藏的按键说明）——这是最大的收藏流量缺口。
+    </div>
+
+    <div class="sub-block">
+      <div class="sub-title">已识别缺口 · 6项</div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>缺口类型</th>
+              <th>缺失内容</th>
+              <th>竞品对标数据</th>
+              <th>优先级</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>使用指南类</strong><br><span style="color:var(--text-muted);font-size:12px">答案型·高收藏</span></td>
+              <td>无系统性功能解析内容（按键说明/隐藏功能/OTA 更新）</td>
+              <td>海豚按键说明：<b style="color:#f87171">3557 收藏</b>，持续引流</td>
+              <td><span class="tag tag-gap">高优先</span></td>
+            </tr>
+            <tr>
+              <td><strong>续航实测类</strong><br><span style="color:var(--text-muted);font-size:12px">决策型·高分享</span></td>
+              <td>无真实续航测试帖（冬季/高速/满电实跑等场景）</td>
+              <td>深蓝L06续航实录稳定互动；深蓝S05 620Max提车分享 65 分享</td>
+              <td><span class="tag tag-gap">高优先</span></td>
+            </tr>
+            <tr>
+              <td><strong>落地价指南</strong><br><span style="color:var(--text-muted);font-size:12px">决策型·高评论</span></td>
+              <td>价格讨论集中在提问帖（216评），缺乏各城市落地价汇总内容</td>
+              <td>Mona03 缺点帖 677 评、深蓝S05 对比帖 249 评均由价格话题驱动</td>
+              <td><span class="tag tag-gap">高优先</span></td>
+            </tr>
+            <tr>
+              <td><strong>颜色话题引导</strong><br><span style="color:var(--text-muted);font-size:12px">情感型·高分享</span></td>
+              <td>黄色"教练车锐评"帖（202评）处于负向传播态势，无正向引导内容</td>
+              <td>欧拉好猫颜色话题帖持续高互动，正反向内容共存建立话题圈</td>
+              <td><span class="tag tag-med">中优先</span></td>
+            </tr>
+            <tr>
+              <td><strong>外部竞品对比</strong><br><span style="color:var(--text-muted);font-size:12px">拦截型·高流量</span></td>
+              <td>LAFA5 与外部竞品（海豚/S05/L06/Mona03）的对比内容几乎为零</td>
+              <td>深蓝L06 vs 小鹏 M03 对比帖：221 评/141 评；海豚缺点类持续输出</td>
+              <td><span class="tag tag-gap">高优先</span></td>
+            </tr>
+            <tr>
+              <td><strong>车主社区建设</strong><br><span style="color:var(--text-muted);font-size:12px">社群型·高黏性</span></td>
+              <td>"寻找全网零跑lafa5车主"帖（248评）表明用户主动寻求圈子但官方无回应</td>
+              <td>欧拉好猫已形成车主圈，深蓝L06/S05 都有提车日记生态</td>
+              <td><span class="tag tag-med">中优先</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="sub-block">
+      <div class="sub-title">LAFA5 当前内容流量结构</div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>内容方向</th>
+              <th>代表笔记</th>
+              <th>赞</th>
+              <th>分享</th>
+              <th>评</th>
+              <th>收</th>
+              <th>流量特征</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>颜值破圈</strong></td>
+              <td>"这可能是零跑里，最帅的一台车"</td>
+              <td class="c-green">1105</td>
+              <td class="c-blue">3130</td>
+              <td>115</td>
+              <td>368</td>
+              <td><span class="tag tag-high">扩散型</span> 分享比极高，情绪共鸣强</td>
+            </tr>
+            <tr>
+              <td><strong>提车体验</strong></td>
+              <td>"提车两周，说说优缺点"</td>
+              <td>862</td>
+              <td>853</td>
+              <td class="c-yellow">491</td>
+              <td>293</td>
+              <td><span class="tag tag-inter">求证型</span> 高评低收，观望用户在集体讨论</td>
+            </tr>
+            <tr>
+              <td><strong>到店探店</strong></td>
+              <td>"报！Lafa5已看！好看！"</td>
+              <td>358</td>
+              <td>861</td>
+              <td>44</td>
+              <td>103</td>
+              <td><span class="tag tag-high">扩散型</span> 高分享说明颜值内容广泛传播</td>
+            </tr>
+            <tr>
+              <td><strong>价格讨论</strong></td>
+              <td>"ultra你们是多少钱落地的"</td>
+              <td>138</td>
+              <td>175</td>
+              <td class="c-yellow">216</td>
+              <td>51</td>
+              <td><span class="tag tag-inter">决策焦虑型</span> 评论量是赞的1.6倍，需要落地价内容承接</td>
+            </tr>
+            <tr>
+              <td><strong>颜色争议</strong></td>
+              <td>"心水的Lafa5黄被我妈锐评教练车"</td>
+              <td>51</td>
+              <td>—</td>
+              <td class="c-red">202</td>
+              <td>—</td>
+              <td><span class="tag tag-gap">风险型</span> 纯评论流量，负向形象无正向内容对冲</td>
+            </tr>
+            <tr>
+              <td><strong>内部竞争</strong></td>
+              <td>"LAFA5和B01极限二选一"</td>
+              <td>162</td>
+              <td>—</td>
+              <td>183</td>
+              <td>43</td>
+              <td><span class="tag tag-med">内耗型</span> 品牌内部流量消耗，需差异化内容区隔</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ② 竞品内容拦截 -->
+<section class="section" id="intercept">
+  <div class="container">
+    <div class="section-label">模块二</div>
+    <h2>竞品内容拦截</h2>
+    <p class="section-desc">核心逻辑：<b>同维度拦截</b>——在同场景同维度下出现，不硬拼不相关卖点。只在 LAFA5 具备真实优势的维度发起拦截，否则绕开。</p>
+
+    <div class="insight insight-warn">
+      <strong>拦截原则：</strong>竞品的高评论内容 = 用户的未解决焦虑 = 流量入口。对竞品的每一个"缺点帖"，都是我们"解答同类焦虑"的搜索拦截机会。关键词覆盖要精准到对方帖子的标题词根，让用户在搜索竞品关键词时看到我们的内容。
+    </div>
+
+    <div class="sub-block">
+      <div class="sub-title">拦截矩阵 · 9款竞品</div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>竞品</th>
+              <th>竞品最大流量弱点</th>
+              <th>代表帖数据</th>
+              <th>LAFA5 拦截维度</th>
+              <th>内容标题方向</th>
+              <th>可行性</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><b>比亚迪海豚</b></td>
+              <td>质量焦虑：生锈通病持续发酵，使用指南内容反而是超高收藏</td>
+              <td>生锈帖：<b class="c-red">1711赞/2596分享/1739评</b><br>通病帖：97赞/417评</td>
+              <td>品质可靠性 + 使用指南<br><span class="tag tag-inter">同维度：车辆用车体验</span></td>
+              <td>① "LAFA5 一年车主，没有遇到这些通病"<br>② "LAFA5 隐藏功能全解析"（收藏型指南）<br>③ "从海豚换来 LAFA5，几个你不会后悔的理由"</td>
+              <td><span class="tag tag-high">高可行</span></td>
+            </tr>
+            <tr>
+              <td><b>小米 Mona03</b></td>
+              <td>缺点焦虑：底盘差/续航虚标/质量问题帖持续高评，观望用户在集体求证缺点</td>
+              <td>"只说缺点 MONA03"：334评<br>"才开两个月发现各种问题"：311评/237赞<br>"感觉买m03是个错误"：315评</td>
+              <td>底盘驾驶感 + 续航实测<br><span class="tag tag-inter">同维度：紧凑级电动车体验</span></td>
+              <td>① "Mona03 vs LAFA5 底盘驾驶感实测"<br>② "同价位我为什么从 Mona03 改选 LAFA5？"<br>③ "LAFA5 2000公里续航实录，没有虚标"</td>
+              <td><span class="tag tag-high">高可行</span></td>
+            </tr>
+            <tr>
+              <td><b>欧拉好猫</b></td>
+              <td>品质争议 + 身份话题：质量帖（工业垃圾）与颜值/身份话题并存，颜值用户仍在纠结</td>
+              <td>"工业垃圾体验"：1124赞/654分享<br>"身份认知"：236赞/926评<br>缺点帖：340赞/345评</td>
+              <td>颜值 + 品质对比<br><span class="tag tag-inter">同维度：个性化小车审美</span></td>
+              <td>① "好猫太可爱但 LAFA5 更耐看，还省了这些麻烦"<br>② "从好猫换到 LAFA5，质量层面的实际感受"<br>③ "女生选车：好猫和 LAFA5 到底怎么选？"</td>
+              <td><span class="tag tag-high">高可行</span></td>
+            </tr>
+            <tr>
+              <td><b>AION i60</b></td>
+              <td>口碑低谷：整体互动偏低，"谁买谁后悔"帖 337 评高讨论，用户处于不确定状态</td>
+              <td>"谁买谁后悔"：157赞/337评/252分享<br>"心里真的很纠结"：134赞/101评<br>服务差评：45赞/86评</td>
+              <td>同价位产品力对比<br><span class="tag tag-inter">同维度：10-15万纯电小车</span></td>
+              <td>① "预算12万，我为什么不选埃安 i60 而选 LAFA5"<br>② "试驾完 i60 之后，我直接去看了 LAFA5"<br>③ "纠结 i60 vs LAFA5？看完这个你就选好了"</td>
+              <td><span class="tag tag-high">高可行</span></td>
+            </tr>
+            <tr>
+              <td><b>深蓝 S05</b></td>
+              <td>决策型内容成熟：S05 有大量决策型帖（"最终定了 S05" 1062赞），是真正的决策拦截战场</td>
+              <td>"最终定了深蓝S05"：1062赞/725分享/241评<br>对比帖（vs Q05）：249评</td>
+              <td>决策场景切入<br><span class="tag tag-inter">同维度：紧凑级家用纯电</span></td>
+              <td>① "在 S05 和 LAFA5 之间反复横跳，最终我选了…"<br>② "S05 vs LAFA5 深度对比，这两个维度差距很大"<br>③ "S05 的颜值确实不错，但我还是选了 LAFA5"</td>
+              <td><span class="tag tag-med">中可行</span></td>
+            </tr>
+            <tr>
+              <td><b>深蓝 L06</b></td>
+              <td>后悔帖 + 对比困惑：L06 颜值内容爆量，但"后悔选了"高评（236评），对比 Mona03 是核心流量</td>
+              <td>颜值帖：691赞/1153分享<br>"后悔选了"：236评<br>vs Mona03：221评/141评</td>
+              <td>颜值 + 用车体验对比<br><span class="tag tag-inter">同维度：时尚轿车审美定位</span></td>
+              <td>① "同时试驾深蓝L06和LAFA5，这些差距真的存在"<br>② "L06车主问我LAFA5会不会后悔，我这么回答他"<br>③ "颜值党的选择：深蓝L06 vs LAFA5 外观实拍对比"</td>
+              <td><span class="tag tag-high">高可行</span></td>
+            </tr>
+            <tr>
+              <td><b>欧拉 5</b></td>
+              <td>品牌宣传缺失 + 高评对比：用户主动吐槽欧拉不会宣传（176赞/129评），vs 萤火虫 642评</td>
+              <td>"欧拉你能不能好好宣传"：176赞/129评<br>vs 萤火虫对比：642评（极高讨论）</td>
+              <td>同女性用户/小车路线<br><span class="tag tag-inter">同维度：个性化小电车场景</span></td>
+              <td>① "欧拉5 vs LAFA5，同价位小车两种路线怎么选"<br>② "喜欢欧拉5 的人，可能也会喜欢 LAFA5"<br>③ "女生开 LAFA5 是什么体验，比欧拉5 多了什么？"</td>
+              <td><span class="tag tag-med">中可行</span></td>
+            </tr>
+            <tr>
+              <td><b>极狐阿尔法 T5</b></td>
+              <td>质量问题集中：噪音/异响/质量问题帖持续高互动，用户失望情绪明显</td>
+              <td>"问题怎么那么多"：171赞/327分享/294评<br>"让你头疼的声音"：82赞/258评<br>半年吐槽：292赞/277评/214收</td>
+              <td>智能 + 品质可靠性<br><span class="tag tag-inter">同维度：智能化家用轿车</span></td>
+              <td>① "试完极狐T5，我理解为什么很多人转投LAFA5了"<br>② "LAFA5 和极狐T5 半年用车：异响问题谁更少？"<br>③ "智能家用轿车，LAFA5 的品控和T5 比起来怎样"</td>
+              <td><span class="tag tag-high">高可行</span></td>
+            </tr>
+            <tr>
+              <td><b>大众高尔夫（电动）</b></td>
+              <td>小众存在感：高尔夫电动版 XHS 内容极少，但油车老粉情感依赖强，有品牌切换用户</td>
+              <td>数据整体偏低（最高赞 96）<br>内容以老款 e-Golf 为主<br>新款电动高尔夫关注度尚低</td>
+              <td>驾驶质感 + 精品小车定位<br><span class="tag tag-inter">同维度：精品小车驾驶体验</span></td>
+              <td>① "开了多年高尔夫，试驾 LAFA5 之后的真实感受"<br>② "从油车到电车：LAFA5 能不能接过高尔夫精品小车的旗帜？"</td>
+              <td><span class="tag tag-low">低优先</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="sub-block">
+      <div class="sub-title">拦截关键词词组 · 建议覆盖</div>
+      <div class="insight">
+        <strong>搜索优化核心词：</strong>以下关键词组合在小红书搜索中出现频率高，建议在内容标题或正文中埋入，以实现自然流量拦截。
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>目标竞品词</th>
+              <th>高频搜索词</th>
+              <th>LAFA5 嵌入策略</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>比亚迪海豚</td>
+              <td>海豚缺点、海豚通病、海豚生锈</td>
+              <td>用"同类紧凑电动车对比"角度，不直接攻击，用数据说话</td>
+            </tr>
+            <tr>
+              <td>Mona03</td>
+              <td>mona03缺点、m03底盘、m03续航虚标</td>
+              <td>在续航对比/底盘实感帖中自然提及 LAFA5 作为备选</td>
+            </tr>
+            <tr>
+              <td>深蓝 L06</td>
+              <td>深蓝L06后悔、L06对比mona03、L06怎么样</td>
+              <td>搜索 L06 的用户已经在对比阶段，适合直接发布 L06 vs LAFA5 横评</td>
+            </tr>
+            <tr>
+              <td>欧拉好猫</td>
+              <td>欧拉好猫缺点、好猫vs、好猫质量</td>
+              <td>颜值路线 + 品质对比，抢占女性用户决策流量</td>
+            </tr>
+            <tr>
+              <td>极狐T5</td>
+              <td>极狐t5问题、t5异响、极狐t5后悔</td>
+              <td>在质量对比帖中，以"同级别智能轿车品控"切入</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ③ 观望用户打动策略 -->
+<section class="section" id="hesitant">
+  <div class="container">
+    <div class="section-label">模块三</div>
+    <h2>观望用户打动策略</h2>
+    <p class="section-desc">基于 LAFA5 自身内容评论区的高频焦虑词，结合竞品内容对比，识别观望用户的真实顾虑并制定定向内容策略。</p>
+
+    <div class="insight insight-danger">
+      <strong>观望用户画像：</strong>已知道 LAFA5，分享/颜值已种草，但因"价格落地不明确"、"质量靠不靠谱"、"和竞品比较犹豫"、"颜色/设计有争议"等原因停留在观望阶段。他们在评论区提问但得不到答案，最终流向有内容的竞品。
+    </div>
+
+    <div class="sub-block">
+      <div class="sub-title">五大观望顾虑与打动策略</div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>顾虑类型</th>
+              <th>观望信号来源</th>
+              <th>打动内容方向</th>
+              <th>参考格式</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><b style="color:#f87171">01</b></td>
+              <td><strong>价格不透明</strong><br>不知道实际落地多少</td>
+              <td>"ultra你们是多少钱落地的" 216评<br>"零跑lafa5预定" 113评</td>
+              <td>各城市落地价实拍清单 + 配置推荐指南。用"我的 LAFA5 xx万落地"作为钩子，附上选配建议</td>
+              <td>📋 收藏型指南<br>🗓️ 报价帖</td>
+            </tr>
+            <tr>
+              <td><b style="color:#f87171">02</b></td>
+              <td><strong>质量不确定</strong><br>怕重蹈竞品通病覆辙</td>
+              <td>海豚通病帖 417评/1711赞<br>极狐T5质量帖持续发酵 294评</td>
+              <td>长期用车报告（1个月/3个月/半年版本），正面解答"有没有出现这些问题"，格式上对标海豚通病帖</td>
+              <td>📅 阶段性用车帖<br>📸 实车细节拍</td>
+            </tr>
+            <tr>
+              <td><b style="color:#f87171">03</b></td>
+              <td><strong>和竞品比较犹豫</strong><br>LAFA5 vs 其他车型</td>
+              <td>"LAFA5和B01极限二选一" 183评<br>深蓝L06 vs Mona03 多帖221评/141评</td>
+              <td>针对高频对比场景出系列对比内容：LAFA5 vs Mona03 / vs L06 / vs 好猫 / vs i60。每篇聚焦1-2个差异维度，不做全方位攻击</td>
+              <td>🆚 对比评测<br>✅ 选购指南</td>
+            </tr>
+            <tr>
+              <td><b style="color:#f87171">04</b></td>
+              <td><strong>颜色/设计有争议</strong><br>特别是黄色"教练车"偏见</td>
+              <td>"心水的Lafa5黄被我妈锐评教练车" 202评<br>颜色讨论高频出现</td>
+              <td>反转叙事：把"教练车锐评"变成内容素材，以"被说像教练车的 LAFA5 黄，上路之后路人反应怎样？"为钩子，做颜色实拍翻案内容</td>
+              <td>🚗 实拍对比<br>👀 路人反应</td>
+            </tr>
+            <tr>
+              <td><b style="color:#f87171">05</b></td>
+              <td><strong>Ultra 版本值不值</strong><br>高配性价比疑问</td>
+              <td>"zero ultra你们是多少钱落地的" 216评/51收<br>Ultra 专属配置关注</td>
+              <td>Ultra 版专属体验帖：智能驾驶/大屏/差异化配置在日常通勤中的实际使用感受，说清楚哪些功能真的值得加钱</td>
+              <td>⚡ 配置深度用车<br>🧪 功能实测</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="sub-block">
+      <div class="sub-title">内容节奏建议</div>
+      <div class="insight insight-success">
+        <strong>阶段一（第1-2周）破局期：</strong>先用1篇高质量"落地价指南"和1篇"颜值全色系实拍"建立内容基础，快速覆盖价格焦虑和颜值话题两个高流量入口。
+      </div>
+      <div class="insight">
+        <strong>阶段二（第3-4周）拦截期：</strong>针对海豚通病、Mona03 缺点、极狐T5 质量问题三大竞品焦虑帖，分别出1篇"LAFA5 有没有同类问题"的用车报告，直接拦截在这些关键词下搜索的用户。
+      </div>
+      <div class="insight">
+        <strong>阶段三（持续）沉淀期：</strong>建立月度/季度用车日记体系，积累"LAFA5 使用X个月"的时间轴内容。参考海豚按键说明的3557收藏模式，出一篇 LAFA5 功能全解析，建立持久收藏流量。
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ④ 执行优先级 TOP10 -->
+<section class="section" id="priority">
+  <div class="container">
+    <div class="section-label">模块四</div>
+    <h2>执行优先级 TOP10</h2>
+    <p class="section-desc">综合内容缺口、竞品拦截机会与观望用户规模，按"流量杠杆×执行难度"排列。</p>
+
+    <ul class="priority-list">
+
+      <li class="priority-item">
+        <div class="priority-num num-1">1</div>
+        <div class="priority-content">
+          <h4>LAFA5 全色系颜值实拍 + 教练车色偏见破解</h4>
+          <p>颜值是 LAFA5 目前最大的自然流量引擎（3130分享），且颜色争议帖（202评）处于负向传播状态。正向颜值内容既能扩大认知圈，又能对冲"教练车"标签，双效覆盖。</p>
+          <div class="priority-meta">
+            <span class="tag tag-gap">内容缺口</span>
+            <span class="tag tag-high">高分享潜力</span>
+            <span class="tag tag-inter">颜值/外观话题</span>
+          </div>
+        </div>
+      </li>
+
+      <li class="priority-item">
+        <div class="priority-num num-2">2</div>
+        <div class="priority-content">
+          <h4>各城市 LAFA5 落地价汇总指南（收藏型）</h4>
+          <p>价格讨论帖 216评 说明强需求，但缺乏系统答案。参考海豚 3557 收藏的使用指南模式，一篇"LAFA5 实际落地价格汇总 + 选配建议"可建立持久收藏流量入口。</p>
+          <div class="priority-meta">
+            <span class="tag tag-gap">内容缺口</span>
+            <span class="tag tag-high">高收藏潜力</span>
+            <span class="tag tag-inter">决策型内容</span>
+          </div>
+        </div>
+      </li>
+
+      <li class="priority-item">
+        <div class="priority-num num-3">3</div>
+        <div class="priority-content">
+          <h4>海豚通病焦虑拦截：LAFA5 有没有这些问题？</h4>
+          <p>海豚生锈帖2596分享/通病帖417评仍在持续发酵。大量用户搜索"海豚通病"时处于品牌摇摆状态。出一篇"从海豚换到LAFA5后，这些通病问题的答案"，直接覆盖这批换车用户。</p>
+          <div class="priority-meta">
+            <span class="tag tag-gap">竞品拦截</span>
+            <span class="tag tag-high">高流量入口</span>
+            <span class="tag tag-inter">海豚通病搜索词</span>
+          </div>
+        </div>
+      </li>
+
+      <li class="priority-item">
+        <div class="priority-num num-4">4</div>
+        <div class="priority-content">
+          <h4>Mona03 缺点流量拦截：底盘/续航同维度对比</h4>
+          <p>Mona03 的"缺点帖"评论均在300+，用户正在大规模搜索 M03 缺点时处于观望状态。出一篇"同价位底盘驾驶感：Mona03 vs LAFA5 实测"，可直接截住这批流量。</p>
+          <div class="priority-meta">
+            <span class="tag tag-gap">竞品拦截</span>
+            <span class="tag tag-high">高评论拦截</span>
+            <span class="tag tag-inter">Mona03底盘/续航词</span>
+          </div>
+        </div>
+      </li>
+
+      <li class="priority-item">
+        <div class="priority-num num-5">5</div>
+        <div class="priority-content">
+          <h4>LAFA5 续航实测（冬季/高速/日常通勤三场景）</h4>
+          <p>竞品中L06续航实录、深蓝S05 提车里程分享等都获得稳定互动，LAFA5 目前完全缺失这类内容。续航实测是高收藏型内容，且能直接回应 Mona03/深蓝L06 用户的续航疑虑。</p>
+          <div class="priority-meta">
+            <span class="tag tag-gap">内容缺口</span>
+            <span class="tag tag-high">高收藏潜力</span>
+            <span class="tag tag-inter">续航/电耗搜索词</span>
+          </div>
+        </div>
+      </li>
+
+      <li class="priority-item">
+        <div class="priority-num num-6">6</div>
+        <div class="priority-content">
+          <h4>极狐 T5 质量问题拦截：品控/异响对比</h4>
+          <p>极狐T5 的质量问题帖（"问题怎么那么多"327分享/294评，"让你头疼的声音"258评）是高强度拦截机会，用户处于强烈失望状态。在同价位智能轿车品控维度切入，可快速截流。</p>
+          <div class="priority-meta">
+            <span class="tag tag-gap">竞品拦截</span>
+            <span class="tag tag-med">中等流量</span>
+            <span class="tag tag-inter">极狐T5质量词</span>
+          </div>
+        </div>
+      </li>
+
+      <li class="priority-item">
+        <div class="priority-num num-7">7</div>
+        <div class="priority-content">
+          <h4>深蓝 L06 vs LAFA5 颜值横评（颜值党向）</h4>
+          <p>L06 颜值帖 1153 分享说明颜值党基数大，且"后悔选了L06"236评说明有换车意愿。出一篇 L06 vs LAFA5 外观实拍对比，精准覆盖这批颜值决策人群。</p>
+          <div class="priority-meta">
+            <span class="tag tag-gap">竞品拦截</span>
+            <span class="tag tag-med">中等流量</span>
+            <span class="tag tag-inter">深蓝L06颜值词</span>
+          </div>
+        </div>
+      </li>
+
+      <li class="priority-item">
+        <div class="priority-num num-8">8</div>
+        <div class="priority-content">
+          <h4>LAFA5 功能全解析（使用指南·高收藏型）</h4>
+          <p>海豚按键说明以 3557 收藏成为长期流量资产。LAFA5 无对应内容。出一篇"零跑 LAFA5 隐藏功能/智能驾驶全解析"，既能补缺口也能建立品牌 SEO 占位。</p>
+          <div class="priority-meta">
+            <span class="tag tag-gap">内容缺口</span>
+            <span class="tag tag-high">长期收藏流量</span>
+            <span class="tag tag-inter">功能/使用技巧词</span>
+          </div>
+        </div>
+      </li>
+
+      <li class="priority-item">
+        <div class="priority-num num-9">9</div>
+        <div class="priority-content">
+          <h4>车主社区激活：发起"全网 LAFA5 车主集合"话题</h4>
+          <p>"寻找全网零跑lafa5车主"帖 248 评说明用户有圈子需求但无官方承接。发起车主话题页，鼓励真实车主出提车 / 用车内容，建立 UGC 生态和搜索流量护城河。</p>
+          <div class="priority-meta">
+            <span class="tag tag-gap">内容缺口</span>
+            <span class="tag tag-med">中等优先</span>
+            <span class="tag tag-inter">车主社群话题</span>
+          </div>
+        </div>
+      </li>
+
+      <li class="priority-item">
+        <div class="priority-num num-10">10</div>
+        <div class="priority-content">
+          <h4>欧拉好猫用户拦截：女性用户颜值/品质路线对比</h4>
+          <p>欧拉好猫"工业垃圾"帖 654 分享/"身份认知"帖 926 评说明颜值女性用户基数大但对品质有顾虑。出一篇"同样是颜值小车，好猫和 LAFA5 用了半年有什么不同"，覆盖女性换车人群。</p>
+          <div class="priority-meta">
+            <span class="tag tag-gap">竞品拦截</span>
+            <span class="tag tag-med">中等优先</span>
+            <span class="tag tag-inter">欧拉好猫/女生选车词</span>
+          </div>
+        </div>
+      </li>
+
+    </ul>
+  </div>
+</section>
+
+<!-- 数据附录 -->
+<section class="section" id="appendix">
+  <div class="container">
+    <div class="section-label">数据附录</div>
+    <h2>各车型小红书内容数据</h2>
+    <p class="section-desc">以下为本次分析覆盖的全部车型典型笔记数据（2026年5月采集）。</p>
+
+    <div class="appendix-grid">
+
+      <div class="appendix-card">
+        <h4>零跑 LAFA5</h4>
+        <ul class="note-list">
+          <li class="note-item">
+            <span class="note-title">这可能是零跑里，最帅的一台车</span>
+            <span class="note-stats"><b>1105赞</b> 3130分享 115评 368收</span>
+          </li>
+          <li class="note-item">
+            <span class="note-title">零跑LAFA5提车两周，说说优缺点</span>
+            <span class="note-stats"><b>862赞</b> 853分享 491评 293收</span>
+          </li>
+          <li class="note-item">
+            <span class="note-title">报！Lafa5已看！好看！</span>
+            <span class="note-stats"><b>358赞</b> 861分享 44评 103收</span>
+          </li>
+          <li class="note-item">
+            <span class="note-title">零跑lafa5预定 今日的双重惊喜</span>
+            <span class="note-stats"><b>219赞</b> 272分享 113评 89收</span>
+          </li>
+          <li class="note-item">
+            <span class="note-title">lafa5 ultra 落地多少钱</span>
+            <span class="note-stats"><b>138赞</b> 175分享 216评 51收</span>
+          </li>
+          <li class="note-item">
+            <span class="note-title">零跑Lafa5和B01极限二选一</span>
+            <span class="note-stats"><b>162赞</b> — 183评 43收</span>
+          </li>
+          <li class="note-item">
+            <span class="note-title">心水的Lafa5黄被我妈锐评教练车</span>
+            <span class="note-stats"><b>51赞</b> — 202评 —</span>
+          </li>
+          <li class="note-item">
+            <span class="note-title">寻找全网零跑lafa5车主</span>
+            <span class="note-stats"><b>49赞</b> — 248评 —</span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="appendix-card">
+        <h4>比亚迪 海豚</h4>
+        <ul class="note-list">
+          <li class="note-item">
+            <span class="note-title">比亚迪海豚按键最全说明</span>
+            <span class="note-stats"><b>3689赞</b> 881分享 60评 <b style="color:#f87171">3557收</b></span>
+          </li>
+          <li class="note-item">
+            <span class="note-title">2年时间 生锈成这个样子</span>
+            <span class="note-stats"><b>1711赞</b> 2596分享 1739评 700收</span>
+          </li>
+          <li class="note-item">
+            <span class="note-title">两万公里体验优缺点</span>
+            <span class="note-stats"><b>1339赞</b> 1043分享 404评 1015收</span>
+          </li>
+          <li class="note-item">
+            <span class="note-title">海豚一年半，啪啪打脸</span>
+            <span class="note-stats"><b>1242赞</b> 326分享 544评 702收</span>
+          </li>
+          <li class="note-item">
+            <span class="note-title">比亚迪海豚有什么缺点？</span>
+            <span class="note-stats"><b>157赞</b> — 966评 —</span>
+          </li>
+          <li class="note-item">
+            <span class="note-title">比亚迪海豚通病</span>
+            <span class="note-stats"><b>97赞</b> — 417评 —</span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="appendix-card">
+        <h4>小米 Mona03</h4>
+        <ul class="note-list">
+          <li class="note-item">
+            <span class="note-title">选小鹏还是选小米</span>
+            <span class="note-stats"><b>659赞</b> 173分享 <b style="color:#f87171">1106评</b> 224收</span>
+          </li>
+          <li class="note-item">
+            <span class="note-title">每人一个缺点打消我买M03的念头</span>
+            <span class="note-stats"><b>208赞</b> — 677评 79收</span>
+          </li>
+          <li class="note-item">
+            <span class="note-title">mona03 才开两个月发现各种问题</span>
+            <span class="note-stats"><b>237赞</b> 155分享 311评 112收</span>
+          </li>
+          <li class="note-item">
+            <span class="note-title">只说缺点MONA03</span>
+            <span class="note-stats"><b>68赞</b> — 334评 42收</span>
+          </li>
+          <li class="note-item">
+            <span class="note-title">感觉买m03是个错误的选择</span>
+            <span class="note-stats"><b>51赞</b> — 315评 —</span>
+          </li>
+          <li class="note-item">
+            <span class="note-title">Mona03颜值高，就是底盘续航不行</span>
+            <span class="note-stats"><b>58赞</b> — 164评 —</span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="appendix-card">
+        <h4>欧拉 好猫</h4>
+        <ul class="note-list">
+          <li class="note-item">
+            <span class="note-title">开欧拉好猫的是不是代表条件还可以</span>
+            <span class="note-stats"><b>236赞</b> — <b style="color:#f87171">926评</b> —</span>
+          </li>
+          <li class="note-item">
+            <span class="note-title">10w买辆工业垃圾是什么体验？</span>
+            <span class="note-stats"><b>1124赞</b> 654分享 258评 455收</span>
+          </li>
+          <li class="note-item">
+            <span class="note-title">预算10W，我为什么买欧拉好猫</span>
+            <span class="note-stats"><b>1027赞</b> 491分享 90评 446收</span>
+          </li>
+          <li class="note-item">
+            <span class="note-title">欧拉好猫只说缺点</span>
+            <span class="note-stats"><b>340赞</b> 254分享 345评 213收</span>
+          </li>
+          <li class="note-item">
+            <span class="note-title">真的会有人认为这个车跑不了高速吗</span>
+            <span class="note-stats"><b>742赞</b> — 383评 —</span>
+          </li>
+          <li class="note-item">
+            <span class="note-title">欧拉好猫硬度在线（碰撞帖）</span>
+            <span class="note-stats"><b>533赞</b> 400分享 — 154收</span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="appendix-card">
+        <h4>AION i60</h4>
+        <ul class="note-list">
+          <li class="note-item">
+            <span class="note-title">埃安i60，谁买谁后悔！</span>
+            <span class="note-stats"><b>157赞</b> 252分享 337评 72收</span>
+          </li>
+          <li class="note-item">
+            <span class="note-title">试驾埃安i60，心里真的很纠结！</span>
+            <span class="note-stats"><b>134赞</b> — 101评 65收</span>
+          </li>
+          <li class="note-item">
+            <span class="note-title">广汽埃安i60服务差评</span>
+            <span class="note-stats"><b>45赞</b> — 86评 —</span>
+          </li>
+          <li class="note-item">
+            <span class="note-title">（整体互动数据偏低，负面舆情为主）</span>
+            <span class="note-stats" style="color:var(--text-dim)">弱势竞品</span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="appendix-card">
+        <h4>深蓝 S05</h4>
+        <ul class="note-list">
+          <li class="note-item">
+            <span class="note-title">最终定了深蓝S05</span>
+            <span class="note-stats"><b>1062赞</b> 725分享 241评 330收</span>
+          </li>
+          <li class="note-item">
+            <span class="note-title">今天又去看了深蓝s05</span>
+            <span class="note-stats"><b>460赞</b> 187分享 389评 166收</span>
+          </li>
+          <li class="note-item">
+            <span class="note-title">长安启源Q05还是深蓝S05</span>
+            <span class="note-stats"><b>45赞</b> 14分享 249评 32收</span>
+          </li>
+          <li class="note-item">
+            <span class="note-title">女生，钛3和S05怎么选</span>
+            <span class="note-stats"><b>35赞</b> 43分享 129评 21收</span>
+          </li>
+          <li class="note-item">
+            <span class="note-title">买深蓝S05确实是个意外</span>
+            <span class="note-stats"><b>33赞</b> 13分享 105评 9收</span>
+          </li>
+          <li class="note-item">
+            <span class="note-title">深蓝s05想贴改色膜的心达到顶峰</span>
+            <span class="note-stats"><b>25赞</b> — 79评 —</span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="appendix-card">
+        <h4>深蓝 L06</h4>
+        <ul class="note-list">
+          <li class="note-item">
+            <span class="note-title">深蓝L06（颜值图文）</span>
+            <span class="note-stats"><b>691赞</b> 1153分享 63评 217收</span>
+          </li>
+          <li class="note-item">
+            <span class="note-title">小鹏m03和深蓝L06如何选择</span>
+            <span class="note-stats"><b>112赞</b> 28分享 221评 44收</span>
+          </li>
+          <li class="note-item">
+            <span class="note-title">深蓝L06 后悔选了</span>
+            <span class="note-stats"><b>37赞</b> 37分享 236评 18收</span>
+          </li>
+          <li class="note-item">
+            <span class="note-title">深蓝l06和小鹏m03买哪个？</span>
+            <span class="note-stats"><b>88赞</b> 32分享 141评 28收</span>
+          </li>
+          <li class="note-item">
+            <span class="note-title">深蓝L06提车初体验</span>
+            <span class="note-stats"><b>154赞</b> 116分享 57评 44收</span>
+          </li>
+          <li class="note-item">
+            <span class="note-title">深蓝L06续航实录</span>
+            <span class="note-stats"><b>86赞</b> 25分享 40评 16收</span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="appendix-card">
+        <h4>欧拉 5</h4>
+        <ul class="note-list">
+          <li class="note-item">
+            <span class="note-title">极限二选一，欧拉5 VS 蔚来萤火虫</span>
+            <span class="note-stats"><b>24赞</b> 15分享 <b style="color:#f87171">642评</b> 7收</span>
+          </li>
+          <li class="note-item">
+            <span class="note-title">长城欧拉5，试驾完，一言难尽</span>
+            <span class="note-stats"><b>188赞</b> 64分享 171评 65收</span>
+          </li>
+          <li class="note-item">
+            <span class="note-title">欧拉！算我求你！能不能好好宣传？</span>
+            <span class="note-stats"><b>176赞</b> 71分享 129评 34收</span>
+          </li>
+          <li class="note-item">
+            <span class="note-title">欧拉 5 首批车主</span>
+            <span class="note-stats"><b>89赞</b> 55分享 237评 20收</span>
+          </li>
+          <li class="note-item">
+            <span class="note-title">最近有点上头欧拉5</span>
+            <span class="note-stats"><b>47赞</b> 8分享 208评 25收</span>
+          </li>
+          <li class="note-item">
+            <span class="note-title">拿下人生第一辆车（欧拉5提车）</span>
+            <span class="note-stats"><b>175赞</b> 87分享 70评 63收</span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="appendix-card">
+        <h4>极狐 阿尔法 T5</h4>
+        <ul class="note-list">
+          <li class="note-item">
+            <span class="note-title">极狐t5 用车半年，吐槽几句</span>
+            <span class="note-stats"><b>292赞</b> 348分享 277评 214收</span>
+          </li>
+          <li class="note-item">
+            <span class="note-title">2026款极狐t5的问题怎么那么多？</span>
+            <span class="note-stats"><b>171赞</b> 327分享 294评 156收</span>
+          </li>
+          <li class="note-item">
+            <span class="note-title">【大熊沉浸式试车】2026款极狐αT5</span>
+            <span class="note-stats"><b>303赞</b> 322分享 35评 155收</span>
+          </li>
+          <li class="note-item">
+            <span class="note-title">极狐T5 让你头疼，魔怔的声音</span>
+            <span class="note-stats"><b>82赞</b> 65分享 258评 69收</span>
+          </li>
+          <li class="note-item">
+            <span class="note-title">吃瓜吃到自己头上，极狐αT5</span>
+            <span class="note-stats"><b>40赞</b> 44分享 303评 19收</span>
+          </li>
+          <li class="note-item">
+            <span class="note-title">极狐T5  5000km用下来 3个最大的不爽</span>
+            <span class="note-stats"><b>29赞</b> 8分享 43评 18收</span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="appendix-card">
+        <h4>大众 高尔夫（电动）</h4>
+        <ul class="note-list">
+          <li class="note-item">
+            <span class="note-title">纯电高尔夫，满电续航测试结束</span>
+            <span class="note-stats"><b>81赞</b> 39分享 81评 23收</span>
+          </li>
+          <li class="note-item">
+            <span class="note-title">油车4代滑铁卢了，电车不知能不能成</span>
+            <span class="note-stats"><b>96赞</b> 57分享 98评 24收</span>
+          </li>
+          <li class="note-item">
+            <span class="note-title">大众高尔夫：电动了，还"神"吗？</span>
+            <span class="note-stats"><b>16赞</b> 14分享 1评 7收</span>
+          </li>
+          <li class="note-item">
+            <span class="note-title">感谢新能源！（油换电话题）</span>
+            <span class="note-stats"><b>271赞</b> 100分享 325评 29收</span>
+          </li>
+          <li class="note-item">
+            <span class="note-title">（整体内容量极少，新款关注度低）</span>
+            <span class="note-stats" style="color:var(--text-dim)">弱竞争态势</span>
+          </li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<div class="footer">
+  <div class="container">
+    零跑LAFA5 小红书内容策略分析报告 · 数据采集时间：2026年5月 · 样本量：200+ 条笔记
+  </div>
+</div>
+
+</body>
+</html>

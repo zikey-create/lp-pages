@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>零跑C系 · 小红书搜索优化与竞品拦截策略</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap');
+  body { font-family: 'Noto Sans SC', -apple-system, sans-serif; background: #f5f5f7; }
+  .card { background: white; border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+  .gradient-header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); }
+  .tag { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 12px; font-weight: 500; }
+  .priority-high { background: #fee2e2; color: #dc2626; }
+  .priority-mid  { background: #fef3c7; color: #d97706; }
+  .priority-low  { background: #d1fae5; color: #059669; }
+  .section-number { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; flex-shrink: 0; }
+  table { border-collapse: collapse; width: 100%; }
+  th { background: #f8fafc; color: #475569; font-weight: 600; font-size: 13px; padding: 12px 14px; text-align: left; border-bottom: 2px solid #e2e8f0; }
+  td { padding: 11px 14px; border-bottom: 1px solid #f1f5f9; font-size: 13.5px; line-height: 1.6; vertical-align: top; }
+  tr:hover td { background: #f8fafc; }
+  .car-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+  .c10 { background: #eff6ff; color: #2563eb; }
+  .c11 { background: #f0fdf4; color: #16a34a; }
+  .c16 { background: #faf5ff; color: #7c3aed; }
+  .insight-box { background: linear-gradient(135deg, #fef9c3, #fef3c7); border-left: 4px solid #f59e0b; border-radius: 8px; padding: 12px 16px; }
+  .rank-badge { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; flex-shrink: 0; }
+  .top3 { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; }
+  .top7 { background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; }
+  .top10 { background: #e2e8f0; color: #475569; }
+  .compete-arrow { color: #94a3b8; font-size: 11px; }
+  .metric-card { background: linear-gradient(135deg, #f8fafc, white); border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; }
+  details summary { cursor: pointer; list-style: none; }
+  details summary::-webkit-details-marker { display: none; }
+  details[open] summary .toggle-icon { transform: rotate(180deg); }
+  .toggle-icon { transition: transform 0.2s; }
+  .sticky-nav { position: sticky; top: 0; z-index: 50; background: rgba(255,255,255,0.95); backdrop-filter: blur(8px); box-shadow: 0 1px 8px rgba(0,0,0,0.08); }
+</style>
+</head>
+<body class="min-h-screen">
+
+<!-- 顶部导航 -->
+<div class="sticky-nav">
+  <div class="max-w-6xl mx-auto px-4 py-3 flex items-center gap-6 overflow-x-auto">
+    <span class="text-sm font-bold text-gray-800 whitespace-nowrap">零跑C系 · XHS策略</span>
+    <div class="flex gap-4 text-sm">
+      <a href="#module1" class="text-blue-600 hover:text-blue-800 whitespace-nowrap font-medium">① 内容缺口</a>
+      <a href="#module2" class="text-green-600 hover:text-green-800 whitespace-nowrap font-medium">② 竞品拦截</a>
+      <a href="#module3" class="text-purple-600 hover:text-purple-800 whitespace-nowrap font-medium">③ 观望打动</a>
+      <a href="#module4" class="text-orange-600 hover:text-orange-800 whitespace-nowrap font-medium">④ 执行优先级</a>
+    </div>
+    <span class="ml-auto text-xs text-gray-400 whitespace-nowrap">数据截至 2026-06-10</span>
+  </div>
+</div>
+
+<!-- Header -->
+<div class="gradient-header text-white">
+  <div class="max-w-6xl mx-auto px-6 py-10">
+    <div class="flex items-start justify-between flex-wrap gap-4">
+      <div>
+        <div class="flex items-center gap-2 mb-2">
+          <span class="tag" style="background:rgba(255,255,255,0.15);color:white;">小红书搜索优化</span>
+          <span class="tag" style="background:rgba(255,255,255,0.15);color:white;">竞品拦截</span>
+          <span class="tag" style="background:rgba(255,255,255,0.15);color:white;">A3增长</span>
+        </div>
+        <h1 class="text-3xl font-bold mb-1">零跑C系列 · 小红书搜索优化与竞品拦截策略</h1>
+        <p class="text-blue-200 text-sm">核心逻辑：搜索优化 &gt; 热点追踪 · 用专业内容击穿决策临界人群 · 驱动A3增长</p>
+      </div>
+      <div class="flex gap-4">
+        <div class="text-center">
+          <div class="text-2xl font-bold">3</div>
+          <div class="text-xs text-blue-200">覆盖车型</div>
+        </div>
+        <div class="text-center">
+          <div class="text-2xl font-bold">5</div>
+          <div class="text-xs text-blue-200">竞品车型</div>
+        </div>
+        <div class="text-center">
+          <div class="text-2xl font-bold">10</div>
+          <div class="text-xs text-blue-200">本月优先方向</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 核心逻辑说明 -->
+    <div class="mt-6 grid grid-cols-3 gap-4 text-sm">
+      <div class="bg-white/10 rounded-xl p-4">
+        <div class="font-semibold mb-1">🎯 目标人群</div>
+        <div class="text-blue-100 text-xs">有购车意向但尚未决策的高潜观望用户，通过主动搜索行为暴露需求</div>
+      </div>
+      <div class="bg-white/10 rounded-xl p-4">
+        <div class="font-semibold mb-1">⚡ 核心打法</div>
+        <div class="text-blue-100 text-xs">精准卡位高频搜索词，用真实场景内容补缺口，不堆参数、用故事驱动转化</div>
+      </div>
+      <div class="bg-white/10 rounded-xl p-4">
+        <div class="font-semibold mb-1">📈 优化指标</div>
+        <div class="text-blue-100 text-xs">重点优化CPC/CPTI，通过优质笔记承接搜索流量，减少竞品拦截损失</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="max-w-6xl mx-auto px-4 py-8 space-y-8">
+
+  <!-- ① 内容缺口诊断 -->
+  <section id="module1">
+    <div class="card p-6">
+      <div class="flex items-center gap-3 mb-5">
+        <div class="section-number" style="background:#eff6ff;color:#2563eb;">①</div>
+        <div>
+          <h2 class="text-xl font-bold text-gray-900">内容缺口诊断</h2>
+          <p class="text-sm text-gray-500">按车型梳理平台内容空白 · 识别无优质笔记承接的高频搜索词</p>
+        </div>
+      </div>
+
+      <!-- C10 -->
+      <details open class="mb-4">
+        <summary class="flex items-center justify-between bg-blue-50 rounded-xl p-4 hover:bg-blue-100 transition">
+          <div class="flex items-center gap-3">
+            <span class="car-badge c10">C10</span>
+            <span class="font-semibold text-gray-800">零跑C10 · 紧凑型纯电SUV · 竞品：深蓝S05 / 元Plus</span>
+          </div>
+          <span class="toggle-icon text-gray-400"><i class="fa fa-chevron-down"></i></span>
+        </summary>
+        <div class="mt-3 overflow-x-auto">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:130px">缺口词</th>
+                <th>当前内容质量评估</th>
+                <th style="width:100px">补充优先级</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="font-medium text-blue-700">C10 27款 vs 26款值不值得等</td>
+                <td>有问帖（评论68条）但无系统性对比笔记；搜索者决策困惑强，现有内容多为个人疑问，缺乏权威专业解答</td>
+                <td><span class="tag priority-high">高 · 立即补</span></td>
+              </tr>
+              <tr>
+                <td class="font-medium text-blue-700">C10 实际续航 冬季/高速</td>
+                <td>"C10这次续航惊到我了"一帖评论36条但互动低；缺乏系统实测数据内容，是高频疑虑词，承接严重不足</td>
+                <td><span class="tag priority-high">高 · 立即补</span></td>
+              </tr>
+              <tr>
+                <td class="font-medium text-blue-700">C10 智驾体验 / AEB 测试</td>
+                <td>平台几乎无专项智驾实测内容，搜索此词几乎空白；竞品元Plus正在大力推"天神之眼"智驾</td>
+                <td><span class="tag priority-high">高 · 立即补</span></td>
+              </tr>
+              <tr>
+                <td class="font-medium text-blue-700">C10 提车必买配件清单</td>
+                <td>有一篇提车配件帖互动较好（点赞48/评论175），但内容为UGC，缺官方或优质KOC版本</td>
+                <td><span class="tag priority-mid">中</span></td>
+              </tr>
+              <tr>
+                <td class="font-medium text-blue-700">零跑 C10 vs 深蓝S05 深度对比</td>
+                <td>两车是直接竞品，平台偶现对比讨论帖但无系统测评；用户自发对比评论多但无权威内容承接</td>
+                <td><span class="tag priority-high">高 · 立即补</span></td>
+              </tr>
+              <tr>
+                <td class="font-medium text-blue-700">C10 落地价 / 优惠政策</td>
+                <td>现有内容多为代购/经销商广告，缺乏真实透明的落地价解析；用户在评论区频繁追问价格</td>
+                <td><span class="tag priority-mid">中</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+
+      <!-- C11 -->
+      <details open class="mb-4">
+        <summary class="flex items-center justify-between bg-green-50 rounded-xl p-4 hover:bg-green-100 transition">
+          <div class="flex items-center gap-3">
+            <span class="car-badge c11">C11</span>
+            <span class="font-semibold text-gray-800">零跑C11 · 中型纯电SUV · 竞品：海狮06 / 宋Ultra</span>
+          </div>
+          <span class="toggle-icon text-gray-400"><i class="fa fa-chevron-down"></i></span>
+        </summary>
+        <div class="mt-3 overflow-x-auto">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:130px">缺口词</th>
+                <th>当前内容质量评估</th>
+                <th style="width:100px">补充优先级</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="font-medium text-green-700">C11 2027款热泵 冬季续航实测</td>
+                <td>"2027款终于上热泵"获98赞/96评论，说明关注高；但后续无跟进实测内容，缺口极大，是最强转化钩子</td>
+                <td><span class="tag priority-high">高 · 立即补</span></td>
+              </tr>
+              <tr>
+                <td class="font-medium text-green-700">C11 真实缺点 / 避坑指南</td>
+                <td>"说说2026款C11的几个小缺点"（51赞/128评论）、"由爱转失望"（52赞/57评论）热度高——负面内容占位！需官方/优质KOC正面承接此词</td>
+                <td><span class="tag priority-high">高 · 立即补</span></td>
+              </tr>
+              <tr>
+                <td class="font-medium text-green-700">C11 高速续航 长途自驾</td>
+                <td>"C11跑一趟就得充电"（80赞/60评论）为负面内容，且无正面内容反驳；长途出行场景严重缺失</td>
+                <td><span class="tag priority-high">高 · 立即补</span></td>
+              </tr>
+              <tr>
+                <td class="font-medium text-green-700">C11 推荐吗 / 值得买吗</td>
+                <td>"零跑c11推荐吗"（118评论）、"零跑c11顶配"（85赞/161评论）有讨论但无专业回答笔记覆盖</td>
+                <td><span class="tag priority-high">高 · 立即补</span></td>
+              </tr>
+              <tr>
+                <td class="font-medium text-green-700">C11 落地16万 性价比</td>
+                <td>"零跑也不便宜啊！C11落地要16w！"（58赞/231评论）——价格认知偏差无正面内容纠偏</td>
+                <td><span class="tag priority-mid">中</span></td>
+              </tr>
+              <tr>
+                <td class="font-medium text-green-700">C11 vs 海狮06 直接对比</td>
+                <td>平台无专项C11 vs 海狮06系统对比，但海狮06智驾内容已大量占位；需及时切入</td>
+                <td><span class="tag priority-high">高 · 立即补</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+
+      <!-- C16 -->
+      <details open class="mb-4">
+        <summary class="flex items-center justify-between bg-purple-50 rounded-xl p-4 hover:bg-purple-100 transition">
+          <div class="flex items-center gap-3">
+            <span class="car-badge c16">C16</span>
+            <span class="font-semibold text-gray-800">零跑C16 · 中大型6座SUV · 竞品：华境S / 日产NX80</span>
+          </div>
+          <span class="toggle-icon text-gray-400"><i class="fa fa-chevron-down"></i></span>
+        </summary>
+        <div class="mt-3 overflow-x-auto">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:130px">缺口词</th>
+                <th>当前内容质量评估</th>
+                <th style="width:100px">补充优先级</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="font-medium text-purple-700">C16 三排座椅 真实乘坐体验</td>
+                <td>现有内容多强调"6座/家庭"标签但缺实际三排乘坐测评；华境S在"六座大空间"已占位，需反制</td>
+                <td><span class="tag priority-high">高 · 立即补</span></td>
+              </tr>
+              <tr>
+                <td class="font-medium text-purple-700">C16 冬季续航 / 高速实测</td>
+                <td>"零跑C16确实很香！但电车一点也不省钱啊！"（203赞/130收藏）说明用电成本/续航焦虑强烈，无专项冬季实测</td>
+                <td><span class="tag priority-high">高 · 立即补</span></td>
+              </tr>
+              <tr>
+                <td class="font-medium text-purple-700">C16 vs 理想 L6/L7 差价值不值</td>
+                <td>"试驾零跑C16，真的比理想还香！"（649赞/994分享/301收藏）为平台最高热帖，说明该对比词流量极大；但内容单薄，需系统化内容矩阵</td>
+                <td><span class="tag priority-high">高 · 立即补</span></td>
+              </tr>
+              <tr>
+                <td class="font-medium text-purple-700">C16 5座 vs 6座 怎么选</td>
+                <td>"26款零跑C16五座和六座你知道怎么选吗"（446赞/363分享/143收藏）——超高互动说明需求真实，但仅一篇内容承接</td>
+                <td><span class="tag priority-high">高 · 立即补</span></td>
+              </tr>
+              <tr>
+                <td class="font-medium text-purple-700">C16 27款升级了什么</td>
+                <td>"新款零跑C16，升级了啥"（236赞/86评论）有内容但不够深度，需官方视角详细解读</td>
+                <td><span class="tag priority-mid">中</span></td>
+              </tr>
+              <tr>
+                <td class="font-medium text-purple-700">C16 智驾 高速NOA 实测</td>
+                <td>平台C16智驾内容几乎空白；而华境S以"华为智驾"为核心卖点在平台大量布局，形成明显劣势</td>
+                <td><span class="tag priority-high">高 · 立即补</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+
+      <div class="insight-box mt-4">
+        <div class="font-semibold text-amber-800 mb-1"><i class="fa fa-lightbulb-o mr-1"></i>诊断小结</div>
+        <div class="text-sm text-amber-900">三款车型共同的最大缺口：<strong>续航实测、智驾实测、竞品对比</strong>三类内容严重不足。C11还存在负面内容占位问题，需优先正面承接"缺点/推荐吗"等词。C16的"vs理想"词是当前平台自然流量最高的词，应优先矩阵化覆盖。</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ② 竞品内容拦截 -->
+  <section id="module2">
+    <div class="card p-6">
+      <div class="flex items-center gap-3 mb-5">
+        <div class="section-number" style="background:#f0fdf4;color:#16a34a;">②</div>
+        <div>
+          <h2 class="text-xl font-bold text-gray-900">竞品内容拦截</h2>
+          <p class="text-sm text-gray-500">追踪竞品高热话题 · 用同维度更强优势覆盖，不跨维度硬拦</p>
+        </div>
+      </div>
+
+      <!-- 拦截原则提示 -->
+      <div class="bg-red-50 border border-red-100 rounded-xl p-4 mb-5 text-sm">
+        <span class="font-semibold text-red-700"><i class="fa fa-shield mr-1"></i>拦截铁律：</span>
+        <span class="text-red-600">对方讲充电速度 → 用更好的充电数据/场景接，不切换到智驾维度。必须在同一需求场景下完成降维打击，否则无效拦截。</span>
+      </div>
+
+      <!-- C10竞品拦截 -->
+      <details open class="mb-6">
+        <summary class="flex items-center gap-3 bg-gray-50 rounded-xl p-4 hover:bg-gray-100 transition">
+          <span class="car-badge c10">C10</span>
+          <span class="font-semibold">C10 拦截：深蓝S05 · 元Plus</span>
+          <span class="toggle-icon ml-auto text-gray-400"><i class="fa fa-chevron-down"></i></span>
+        </summary>
+        <div class="mt-3 overflow-x-auto">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:90px">竞品</th>
+                <th style="width:160px">竞品热点词/话题</th>
+                <th>拦截角度</th>
+                <th>对应C10优势</th>
+                <th style="width:120px">内容形式建议</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="tag" style="background:#fff7ed;color:#ea580c;">深蓝S05</span></td>
+                <td class="font-medium">「深蓝S05增程 不焦虑」「加油开 随便跑」</td>
+                <td>增程用户担心油耗、保养费用；用纯电的<strong>真实用车成本对比</strong>反制</td>
+                <td>C10纯电每公里成本更低，无需保养发动机，城市通勤无焦虑；以真实账单说话</td>
+                <td>🎬 账单实拍 + 一年养车成本对比图文</td>
+              </tr>
+              <tr>
+                <td><span class="tag" style="background:#fff7ed;color:#ea580c;">深蓝S05</span></td>
+                <td class="font-medium">「深蓝S05颜值」「灰色比蓝色好看」（165赞）</td>
+                <td>颜值是高频决策因素；用同维度的<strong>C10外观/配色拍摄</strong>覆盖该词</td>
+                <td>C10黑武士特别版/新款外观有明显设计感，需高质量摄影内容占位"纯电SUV颜值"词</td>
+                <td>📸 专业摄影图文，卡位"纯电SUV颜值"话题</td>
+              </tr>
+              <tr>
+                <td><span class="tag" style="background:#fef2f2;color:#dc2626;">元Plus</span></td>
+                <td class="font-medium">「第三代元PLUS 闪充」「11.99万起」「配置差异」（1116赞！）</td>
+                <td>用户被元Plus低价吸引；拦截点在<strong>同价位配置/空间对比</strong>，不能只讲价格</td>
+                <td>C10在同价位空间更大、内饰用料更好；需出专项"XX万级纯电SUV空间横评"抢占搜索</td>
+                <td>📊 配置横向对比图文 + 视频实测</td>
+              </tr>
+              <tr>
+                <td><span class="tag" style="background:#fef2f2;color:#dc2626;">元Plus</span></td>
+                <td class="font-medium">「比亚迪15万你还买吗」（453赞/292评论）</td>
+                <td>用户在价格区间内做取舍；用<strong>落地价+实际配置</strong>做清晰的理性拆解</td>
+                <td>同落地价对比，C10的空间/隔音/做工综合价值更强；需实车对比数据支撑</td>
+                <td>📝 「XX万我为什么没选元Plus选了C10」真实车主故事</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+
+      <!-- C11竞品拦截 -->
+      <details open class="mb-6">
+        <summary class="flex items-center gap-3 bg-gray-50 rounded-xl p-4 hover:bg-gray-100 transition">
+          <span class="car-badge c11">C11</span>
+          <span class="font-semibold">C11 拦截：海狮06 · 宋Ultra</span>
+          <span class="toggle-icon ml-auto text-gray-400"><i class="fa fa-chevron-down"></i></span>
+        </summary>
+        <div class="mt-3 overflow-x-auto">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:90px">竞品</th>
+                <th style="width:160px">竞品热点词/话题</th>
+                <th>拦截角度</th>
+                <th>对应C11优势</th>
+                <th style="width:120px">内容形式建议</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="tag" style="background:#f0f9ff;color:#0284c7;">海狮06</span></td>
+                <td class="font-medium">「2026款海狮06EV 闪充」（173赞/323分享）</td>
+                <td>对方主打闪充（快充速度），必须在<strong>同充电维度</strong>正面回应，不能讲其他</td>
+                <td>C11 2027款快充参数 vs 海狮06；在实际场景下（20分钟补能X公里）用数据打</td>
+                <td>🔋 「充电对决」实测视频，同场景计时</td>
+              </tr>
+              <tr>
+                <td><span class="tag" style="background:#f0f9ff;color:#0284c7;">海狮06</span></td>
+                <td class="font-medium">「26款海狮06 天神之眼B 城区智驾实测」（227赞）</td>
+                <td>海狮06打城区智驾；C11需在<strong>同维度智驾场景</strong>进行实测内容覆盖</td>
+                <td>C11的城区辅助驾驶能力实测，以真实场景视频对抗，不能只讲参数</td>
+                <td>🎬 城区同路段智驾对比短视频</td>
+              </tr>
+              <tr>
+                <td><span class="tag" style="background:#f5f3ff;color:#7c3aed;">宋Ultra</span></td>
+                <td class="font-medium">「宋ultra 品控就这样？」（323赞/576评论！！）</td>
+                <td>宋Ultra品控口碑有明显裂缝；拦截点在<strong>同维度品控/做工</strong>内容，用C11的品控细节正面对比</td>
+                <td>C11的内饰做工、密封性、用料细节；在"提车真实体验"词上占位，用车主亲测体验说话</td>
+                <td>📸 提车验车全流程图文，重点展示做工细节</td>
+              </tr>
+              <tr>
+                <td><span class="tag" style="background:#f5f3ff;color:#7c3aed;">宋Ultra</span></td>
+                <td class="font-medium">「宋ultra 绝对是今年纯电首选」（272赞/168评论）</td>
+                <td>对方强调"产品力综合领先"；在<strong>同类产品力维度</strong>做系统横评，不能虚夸</td>
+                <td>C11 vs 宋Ultra 在同价位的空间/智驾/能耗综合对比，以数据和场景说话</td>
+                <td>📊 「中型纯电SUV 2026年横评」系列</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+
+      <!-- C16竞品拦截 -->
+      <details open class="mb-4">
+        <summary class="flex items-center gap-3 bg-gray-50 rounded-xl p-4 hover:bg-gray-100 transition">
+          <span class="car-badge c16">C16</span>
+          <span class="font-semibold">C16 拦截：华境S · 日产NX80</span>
+          <span class="toggle-icon ml-auto text-gray-400"><i class="fa fa-chevron-down"></i></span>
+        </summary>
+        <div class="mt-3 overflow-x-auto">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:90px">竞品</th>
+                <th style="width:160px">竞品热点词/话题</th>
+                <th>拦截角度</th>
+                <th>对应C16优势</th>
+                <th style="width:120px">内容形式建议</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="tag" style="background:#fdf4ff;color:#a21caf;">华境S</span></td>
+                <td class="font-medium">「15万想要华为智驾的SUV」（164赞/98收藏）</td>
+                <td>华境S核心卖点是华为智驾；必须在<strong>同智驾维度</strong>正面回应，用C16智驾实测覆盖</td>
+                <td>C16的高速NOA/城区智驾实测场景；用真实测试数据和体验感受对比华为ADS</td>
+                <td>🎬 高速同路段智驾实测对比视频</td>
+              </tr>
+              <tr>
+                <td><span class="tag" style="background:#fdf4ff;color:#a21caf;">华境S</span></td>
+                <td class="font-medium">「华境S 2026最夯大六座」（247赞/125收藏）、「今天最便宜的五米二六座SUV」（281赞/294评论）</td>
+                <td>华境S打"最大六座空间"；C16需在<strong>同六座场景</strong>用更直观的空间体验内容反制</td>
+                <td>C16六座的第三排实际乘坐体验、腿部空间实测；用真实身高乘坐视频说话，不讲数字讲感受</td>
+                <td>📏 三排空间实测+对比，真实家庭场景</td>
+              </tr>
+              <tr>
+                <td><span class="tag" style="background:#fdf4ff;color:#a21caf;">华境S</span></td>
+                <td class="font-medium">「试驾完华境s，真的一言难尽」（262赞/268评论）、「华境S优缺点」（61赞/142评论）</td>
+                <td>华境S本身有争议（一言难尽）；用户搜索时处于对比观望状态，是<strong>最佳拦截时机</strong></td>
+                <td>用「我最终选了C16而不是华境S」真实决策故事，卡位"华境S vs C16"搜索词</td>
+                <td>📝 「华境S vs C16 我的选择和理由」真实车主决策笔记</td>
+              </tr>
+              <tr>
+                <td><span class="tag" style="background:#e0f2fe;color:#0369a1;">日产NX80</span></td>
+                <td class="font-medium">平台声量极低，几乎无内容</td>
+                <td>日产品牌信任度高但NX80在新能源平台存在感极弱；暂无需专项拦截，资源集中在华境S</td>
+                <td>—</td>
+                <td>观察为主，暂不专项布局</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- ③ 观望用户打动策略 -->
+  <section id="module3">
+    <div class="card p-6">
+      <div class="flex items-center gap-3 mb-5">
+        <div class="section-number" style="background:#faf5ff;color:#7c3aed;">③</div>
+        <div>
+          <h2 class="text-xl font-bold text-gray-900">观望用户打动策略</h2>
+          <p class="text-sm text-gray-500">识别决策临界用户核心疑虑 · 用场景和真实感受转化，不堆参数</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+
+        <!-- 疑虑1：价格 -->
+        <div class="border border-gray-100 rounded-xl overflow-hidden">
+          <div class="bg-red-50 p-4 border-b border-red-100">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="text-red-500 font-bold text-lg">💰</span>
+              <span class="font-semibold text-gray-800">疑虑类型：价格/性价比</span>
+            </div>
+            <div class="text-xs text-gray-500">典型表达："零跑也不便宜啊" / "比亚迪15万你还买吗" / "落地16w"</div>
+          </div>
+          <div class="p-4 space-y-3 text-sm">
+            <div>
+              <span class="font-medium text-gray-700">内容切入角度：</span>
+              <span class="text-gray-600">不比裸车价，比全生命周期价值；重点算清"5年真实用车成本"，把每月实际支出可视化</span>
+            </div>
+            <div>
+              <span class="font-medium text-gray-700">推荐表达方式：</span>
+              <span class="text-gray-600">真实账单晒图；"我为什么觉得XX万买C1X不亏"，具体到保险/充电/保养三项对比</span>
+            </div>
+            <div class="bg-orange-50 rounded-lg p-3">
+              <span class="font-medium text-orange-700">参考选题：</span>
+              <div class="text-orange-600 mt-1">「开了1年C10，算算每月花了多少钱」「落地16万C11 vs 竞品，5年到底谁更省」</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 疑虑2：续航焦虑 -->
+        <div class="border border-gray-100 rounded-xl overflow-hidden">
+          <div class="bg-yellow-50 p-4 border-b border-yellow-100">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="text-yellow-500 font-bold text-lg">🔋</span>
+              <span class="font-semibold text-gray-800">疑虑类型：续航焦虑</span>
+            </div>
+            <div class="text-xs text-gray-500">典型表达："跑一趟就得充电" / "高速续航缩水" / "冬天到底能跑多远"</div>
+          </div>
+          <div class="p-4 space-y-3 text-sm">
+            <div>
+              <span class="font-medium text-gray-700">内容切入角度：</span>
+              <span class="text-gray-600">不报标定续航，用具体出行场景说话——通勤X公里充一次/高速X公里一箱电；把续航变成生活场景</span>
+            </div>
+            <div>
+              <span class="font-medium text-gray-700">推荐表达方式：</span>
+              <span class="text-gray-600">第一视角驾驶vlog；屏幕录制实时续航剩余；冬季出行真实记录，不美化、敢于展示真实数据</span>
+            </div>
+            <div class="bg-yellow-50 rounded-lg p-3">
+              <span class="font-medium text-yellow-700">参考选题：</span>
+              <div class="text-yellow-600 mt-1">「用C10跑了北京到天津，充了几次电」「C16带全家三排坐满，高速能跑多远」</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 疑虑3：品控/质量口碑 -->
+        <div class="border border-gray-100 rounded-xl overflow-hidden">
+          <div class="bg-green-50 p-4 border-b border-green-100">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="text-green-500 font-bold text-lg">🔍</span>
+              <span class="font-semibold text-gray-800">疑虑类型：品控/质量口碑</span>
+            </div>
+            <div class="text-xs text-gray-500">典型表达："由爱转失望" / "零跑C11有几个小缺点" / "使用一年后吐槽"</div>
+          </div>
+          <div class="p-4 space-y-3 text-sm">
+            <div>
+              <span class="font-medium text-gray-700">内容切入角度：</span>
+              <span class="text-gray-600">正视缺点，以"一年后真实体验"为主轴，主动暴露小问题但强调整体满意度；不回避，才有信任</span>
+            </div>
+            <div>
+              <span class="font-medium text-gray-700">推荐表达方式：</span>
+              <span class="text-gray-600">长期车主真实记录；必须有具体的缺点描述（否则像广告），再跟进"但这几点让我不后悔"的正面感受</span>
+            </div>
+            <div class="bg-green-50 rounded-lg p-3">
+              <span class="font-medium text-green-700">参考选题：</span>
+              <div class="text-green-600 mt-1">「开了C11一年，说几个真实缺点」（主动承接负面词）「提车验车教程：这些细节要重点看」</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 疑虑4：智驾可靠性 -->
+        <div class="border border-gray-100 rounded-xl overflow-hidden">
+          <div class="bg-blue-50 p-4 border-b border-blue-100">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="text-blue-500 font-bold text-lg">🤖</span>
+              <span class="font-semibold text-gray-800">疑虑类型：智驾可靠性</span>
+            </div>
+            <div class="text-xs text-gray-500">典型表达："智驾敢不敢用" / "AEB有用吗" / "和华为比差多少"</div>
+          </div>
+          <div class="p-4 space-y-3 text-sm">
+            <div>
+              <span class="font-medium text-gray-700">内容切入角度：</span>
+              <span class="text-gray-600">不讲技术架构，讲"我敢不敢放手让它开"；用具体通勤/高速场景的真实体验替代参数对比</span>
+            </div>
+            <div>
+              <span class="font-medium text-gray-700">推荐表达方式：</span>
+              <span class="text-gray-600">第一视角实测视频（一定要有失误/介入场景，真实感才高）；建立"没有完美但够用"的预期管理</span>
+            </div>
+            <div class="bg-blue-50 rounded-lg p-3">
+              <span class="font-medium text-blue-700">参考选题：</span>
+              <div class="text-blue-600 mt-1">「C11智驾上海高速NOA实测，高峰期敢用吗」「C16辅助驾驶：下班路上真实一小时」</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 疑虑5：新能源品牌可信度 -->
+        <div class="border border-gray-100 rounded-xl overflow-hidden">
+          <div class="bg-purple-50 p-4 border-b border-purple-100">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="text-purple-500 font-bold text-lg">🏢</span>
+              <span class="font-semibold text-gray-800">疑虑类型：零跑品牌可信度</span>
+            </div>
+            <div class="text-xs text-gray-500">典型表达："零跑凭什么" / "零跑以后还在不在" / "售后怎么样"</div>
+          </div>
+          <div class="p-4 space-y-3 text-sm">
+            <div>
+              <span class="font-medium text-gray-700">内容切入角度：</span>
+              <span class="text-gray-600">用销量数据+真实车主规模建立信任；Stellantis合资背书/全栈自研亮点科普，但要有人情味</span>
+            </div>
+            <div>
+              <span class="font-medium text-gray-700">推荐表达方式：</span>
+              <span class="text-gray-600">真实售后服务体验贴；"我的C16送保第一次"记录；不刷好感，记录真实流程</span>
+            </div>
+            <div class="bg-purple-50 rounded-lg p-3">
+              <span class="font-medium text-purple-700">参考选题：</span>
+              <div class="text-purple-600 mt-1">「零跑断崖第一的背后：5月销量全解析」「我的C10保养全记录：比BBA便宜多少」</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 疑虑6：选哪款/怎么选 -->
+        <div class="border border-gray-100 rounded-xl overflow-hidden">
+          <div class="bg-orange-50 p-4 border-b border-orange-100">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="text-orange-500 font-bold text-lg">🤔</span>
+              <span class="font-semibold text-gray-800">疑虑类型：车型/配置选择困惑</span>
+            </div>
+            <div class="text-xs text-gray-500">典型表达："C10还是C11怎么选" / "27款还是等新款" / "哪个配置性价比最高"</div>
+          </div>
+          <div class="p-4 space-y-3 text-sm">
+            <div>
+              <span class="font-medium text-gray-700">内容切入角度：</span>
+              <span class="text-gray-600">以用户画像为切口：「你是哪种人就选哪款」；不做"全能最好"的广告，做真实的分层推荐</span>
+            </div>
+            <div>
+              <span class="font-medium text-gray-700">推荐表达方式：</span>
+              <span class="text-gray-600">流程图/表格型选车决策图文（高收藏率格式）；用"如果你是XX场景，选X配置"结构化表达</span>
+            </div>
+            <div class="bg-orange-50 rounded-lg p-3">
+              <span class="font-medium text-orange-700">参考选题：</span>
+              <div class="text-orange-600 mt-1">「C10/C11/C16怎么选？3分钟定位你的需求」「零跑C11买哪个配置最划算：3款对比测评」</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ④ 执行优先级TOP10 -->
+  <section id="module4">
+    <div class="card p-6">
+      <div class="flex items-center gap-3 mb-5">
+        <div class="section-number" style="background:#fff7ed;color:#ea580c;">④</div>
+        <div>
+          <h2 class="text-xl font-bold text-gray-900">本月执行优先级 TOP 10</h2>
+          <p class="text-sm text-gray-500">综合：缺口严重程度 × 竞品威胁度 × 用户转化潜力</p>
+        </div>
+      </div>
+
+      <div class="space-y-3">
+
+        <!-- TOP 1 -->
+        <div class="flex items-start gap-4 p-4 rounded-xl border border-amber-200 bg-amber-50">
+          <div class="rank-badge top3">T1</div>
+          <div class="flex-1">
+            <div class="flex items-center gap-2 mb-1 flex-wrap">
+              <span class="car-badge c11">C11</span>
+              <span class="font-semibold text-gray-900">「C11 2027款热泵 冬季续航真实测试」</span>
+              <span class="tag priority-high">缺口极大</span>
+            </div>
+            <div class="text-sm text-gray-600"><strong>原因：</strong>热泵上市热度最高（98赞/96评论），0后续实测内容跟进；是最强A3转化钩子，先发优势窗口期短。</div>
+            <div class="text-sm text-amber-700 mt-1"><strong>执行要点：</strong>冬季城市/高速双场景实测，用具体数据（20°C跑620km vs -10°C跑XXkm），对比老款升级幅度。</div>
+          </div>
+        </div>
+
+        <!-- TOP 2 -->
+        <div class="flex items-start gap-4 p-4 rounded-xl border border-amber-200 bg-amber-50">
+          <div class="rank-badge top3">T2</div>
+          <div class="flex-1">
+            <div class="flex items-center gap-2 mb-1 flex-wrap">
+              <span class="car-badge c16">C16</span>
+              <span class="font-semibold text-gray-900">「C16 vs 理想L6/L7 差价到底值不值」系列</span>
+              <span class="tag priority-high">流量最高词</span>
+            </div>
+            <div class="text-sm text-gray-600"><strong>原因：</strong>"比理想还香"单帖649赞/994分享/301收藏，是全平台C16最高互动内容，证明词的流量极大，但仅1篇内容。</div>
+            <div class="text-sm text-amber-700 mt-1"><strong>执行要点：</strong>出3-5篇不同角度（空间/智驾/油耗/颜值）的C16 vs 理想系列，矩阵覆盖，非单篇作战。</div>
+          </div>
+        </div>
+
+        <!-- TOP 3 -->
+        <div class="flex items-start gap-4 p-4 rounded-xl border border-amber-200 bg-amber-50">
+          <div class="rank-badge top3">T3</div>
+          <div class="flex-1">
+            <div class="flex items-center gap-2 mb-1 flex-wrap">
+              <span class="car-badge c11">C11</span>
+              <span class="font-semibold text-gray-900">「C11 真实缺点/避坑」正面承接负面词</span>
+              <span class="tag priority-high">负面内容占位</span>
+            </div>
+            <div class="text-sm text-gray-600"><strong>原因：</strong>"由爱转失望""几个小缺点"等负面内容正在C11缺点词上占位，未被正面内容覆盖，将持续拉低用户决策信心。</div>
+            <div class="text-sm text-amber-700 mt-1"><strong>执行要点：</strong>主动出"C11一年真实缺点盘点"，2/8原则：坦诚讲两成缺点，八成是客观使用体验，结尾用满意度承接。</div>
+          </div>
+        </div>
+
+        <!-- TOP 4 -->
+        <div class="flex items-start gap-4 p-4 rounded-xl border border-indigo-200 bg-indigo-50">
+          <div class="rank-badge top7">T4</div>
+          <div class="flex-1">
+            <div class="flex items-center gap-2 mb-1 flex-wrap">
+              <span class="car-badge c10">C10</span>
+              <span class="font-semibold text-gray-900">「C10 vs 深蓝S05 vs 元Plus 三车横评」</span>
+              <span class="tag priority-high">竞品威胁高</span>
+            </div>
+            <div class="text-sm text-gray-600"><strong>原因：</strong>元Plus第三代上市热度极高（1116赞配置图），深蓝S05搜索量持续稳定；C10处于被动防守状态，需主动出击。</div>
+            <div class="text-sm text-indigo-700 mt-1"><strong>执行要点：</strong>做专项三车对比，重点维度：空间/实际续航/智驾/做工；可与中立KOC合作，避免广告感。</div>
+          </div>
+        </div>
+
+        <!-- TOP 5 -->
+        <div class="flex items-start gap-4 p-4 rounded-xl border border-indigo-200 bg-indigo-50">
+          <div class="rank-badge top7">T5</div>
+          <div class="flex-1">
+            <div class="flex items-center gap-2 mb-1 flex-wrap">
+              <span class="car-badge c11">C11</span>
+              <span class="font-semibold text-gray-900">「C11 vs 海狮06 充电速度实测对决」</span>
+              <span class="tag" style="background:#fee2e2;color:#dc2626;">竞品主攻方向</span>
+            </div>
+            <div class="text-sm text-gray-600"><strong>原因：</strong>海狮06 EV已在"闪充"词上大量布局（173赞/323分享），是其核心卖点；若不及时在同维度反制，该词流量将持续被截走。</div>
+            <div class="text-sm text-indigo-700 mt-1"><strong>执行要点：</strong>同场快充对比视频，20min、40min各补了多少公里；实际用车场景（午休充电/上班间隙），用时间感而非功率。</div>
+          </div>
+        </div>
+
+        <!-- TOP 6 -->
+        <div class="flex items-start gap-4 p-4 rounded-xl border border-indigo-200 bg-indigo-50">
+          <div class="rank-badge top7">T6</div>
+          <div class="flex-1">
+            <div class="flex items-center gap-2 mb-1 flex-wrap">
+              <span class="car-badge c16">C16</span>
+              <span class="font-semibold text-gray-900">「C16 vs 华境S 智驾+空间双维度」</span>
+              <span class="tag" style="background:#fee2e2;color:#dc2626;">竞品主攻方向</span>
+            </div>
+            <div class="text-sm text-gray-600"><strong>原因：</strong>华境S以华为智驾为核心卖点，已有多篇高热内容；叠加"试驾一言难尽"争议口碑，是最佳切入时机——用户处于动摇状态。</div>
+            <div class="text-sm text-indigo-700 mt-1"><strong>执行要点：</strong>出「华境S vs C16最终我选了谁」真实决策故事，智驾和三排空间双维度，要有真实放弃华境S的理由。</div>
+          </div>
+        </div>
+
+        <!-- TOP 7 -->
+        <div class="flex items-start gap-4 p-4 rounded-xl border border-indigo-200 bg-indigo-50">
+          <div class="rank-badge top7">T7</div>
+          <div class="flex-1">
+            <div class="flex items-center gap-2 mb-1 flex-wrap">
+              <span class="car-badge c16">C16</span>
+              <span class="font-semibold text-gray-900">「C16 5座 vs 6座 完整选购指南」</span>
+              <span class="tag priority-high">高收藏潜力词</span>
+            </div>
+            <div class="text-sm text-gray-600"><strong>原因：</strong>已有帖子（446赞/363分享/143收藏）证明词的需求极强，但仅1篇内容，极易做出超越原帖的内容。</div>
+            <div class="text-sm text-indigo-700 mt-1"><strong>执行要点：</strong>流程图/决策树格式（高收藏格式），核心是"你有几个孩子/多久跑一次长途"等场景化决策路径。</div>
+          </div>
+        </div>
+
+        <!-- TOP 8 -->
+        <div class="flex items-start gap-4 p-4 rounded-xl border border-gray-200 bg-gray-50">
+          <div class="rank-badge top10">T8</div>
+          <div class="flex-1">
+            <div class="flex items-center gap-2 mb-1 flex-wrap">
+              <span class="car-badge c10">C10</span>
+              <span class="font-semibold text-gray-900">「C10 27款 vs 26款 详细对比」</span>
+              <span class="tag priority-mid">高频疑问词</span>
+            </div>
+            <div class="text-sm text-gray-600"><strong>原因：</strong>"27款还是26款"帖评论68条，是典型的决策困惑型搜索，无权威答案内容，容易做出高互动帖。</div>
+            <div class="text-sm text-gray-500 mt-1"><strong>执行要点：</strong>逐项对比升级点，给出「什么人值得等/什么人现在下手」的明确建议，避免模糊答案。</div>
+          </div>
+        </div>
+
+        <!-- TOP 9 -->
+        <div class="flex items-start gap-4 p-4 rounded-xl border border-gray-200 bg-gray-50">
+          <div class="rank-badge top10">T9</div>
+          <div class="flex-1">
+            <div class="flex items-center gap-2 mb-1 flex-wrap">
+              <span class="car-badge c11">C11</span>
+              <span class="font-semibold text-gray-900">「宋Ultra品控问题 → C11做工体验」正向拦截</span>
+              <span class="tag priority-mid">竞品弱点</span>
+            </div>
+            <div class="text-sm text-gray-600"><strong>原因：</strong>宋Ultra"品控就这样"（576评论！）是平台高热争议，用户处于动摇状态，是C11最低成本的拦截机会。</div>
+            <div class="text-sm text-gray-500 mt-1"><strong>执行要点：</strong>出「同价位电车提车验车哪些细节最重要」，以C11做工为例展示细节，不点名踩对方但暗示对比。</div>
+          </div>
+        </div>
+
+        <!-- TOP 10 -->
+        <div class="flex items-start gap-4 p-4 rounded-xl border border-gray-200 bg-gray-50">
+          <div class="rank-badge top10">T10</div>
+          <div class="flex-1">
+            <div class="flex items-center gap-2 mb-1 flex-wrap">
+              <span class="car-badge c10 c11 c16" style="background:#f8fafc;color:#475569;">全系</span>
+              <span class="font-semibold text-gray-900">「零跑C系 2026年5月销量解读」</span>
+              <span class="tag priority-mid">品牌信任背书</span>
+            </div>
+            <div class="text-sm text-gray-600"><strong>原因：</strong>"零跑断崖第一"销量话题已有用户自发讨论；借势输出品牌口碑背书内容，转化对品牌可信度有疑虑的观望用户。</div>
+            <div class="text-sm text-gray-500 mt-1"><strong>执行要点：</strong>用真实销量数据图，用"这么多人选它的理由"为切口，避免自夸式表达，用数据说话。</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- 月度执行总览 -->
+      <div class="mt-6 grid grid-cols-3 gap-4">
+        <div class="metric-card text-center">
+          <div class="text-2xl font-bold text-red-600">5篇</div>
+          <div class="text-sm text-gray-500 mt-1">立即启动（本周内）</div>
+          <div class="text-xs text-gray-400">T1/T2/T3/T4/T5</div>
+        </div>
+        <div class="metric-card text-center">
+          <div class="text-2xl font-bold text-indigo-600">3篇</div>
+          <div class="text-sm text-gray-500 mt-1">两周内完成</div>
+          <div class="text-xs text-gray-400">T6/T7/T8</div>
+        </div>
+        <div class="metric-card text-center">
+          <div class="text-2xl font-bold text-gray-600">2篇</div>
+          <div class="text-sm text-gray-500 mt-1">本月完成</div>
+          <div class="text-xs text-gray-400">T9/T10</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 页脚备注 -->
+  <div class="text-center text-xs text-gray-400 pb-8">
+    数据来源：小红书平台实时搜索 · 生成时间：2026-06-10 · 建议每月更新竞品动态
+  </div>
+
+</div>
+</body>
+</html>

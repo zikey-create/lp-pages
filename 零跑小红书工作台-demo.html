@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>零跑小红书 · AI 工作台</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #0b0d14; color: #dde1f0; font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif; height: 100vh; overflow: hidden; }
+
+/* Layout */
+.layout { display: flex; height: 100vh; }
+.sidebar { width: 216px; flex-shrink: 0; background: #0f1119; border-right: 1px solid #1c1f2e; display: flex; flex-direction: column; }
+.main { flex: 1; overflow: hidden; position: relative; }
+.page { position: absolute; inset: 0; overflow-y: auto; padding: 28px; display: none; }
+.page.active { display: block; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-thumb { background: #252838; border-radius: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+
+/* Sidebar */
+.sidebar-logo { padding: 16px; border-bottom: 1px solid #1c1f2e; display: flex; align-items: center; gap: 10px; }
+.logo-icon { width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, #3b6ef5 0%, #7c3aed 100%); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; flex-shrink: 0; }
+.sidebar-cycle { padding: 12px 16px; border-bottom: 1px solid #1c1f2e; }
+.sidebar-nav { flex: 1; padding: 8px; overflow-y: auto; }
+.nav-item { padding: 8px 12px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 13px; color: #7a7f9a; transition: all 0.15s; margin-bottom: 1px; }
+.nav-item:hover { background: #181b28; color: #b0b8d0; }
+.nav-item.active { background: #182040; color: #6b9fff; }
+.nav-section { padding: 10px 12px 4px; font-size: 10px; color: #383c52; text-transform: uppercase; letter-spacing: 0.08em; }
+.nav-badge { margin-left: auto; background: #c2500a; color: white; font-size: 10px; border-radius: 10px; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+.sidebar-team { padding: 12px 16px; border-top: 1px solid #1c1f2e; }
+.avatar { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; position: relative; }
+.online-dot { position: absolute; bottom: 0; right: 0; width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid #0f1119; }
+
+/* Cards */
+.card { background: #13161f; border: 1px solid #1c1f2e; border-radius: 12px; }
+.module-card { background: #13161f; border: 1px solid #1c1f2e; border-radius: 12px; padding: 20px; cursor: pointer; transition: all 0.18s; }
+.module-card:hover { border-color: #2a3050; background: #161a28; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+
+/* Tags */
+.tag { display: inline-flex; align-items: center; border-radius: 4px; padding: 2px 7px; font-size: 11px; font-weight: 500; white-space: nowrap; }
+.tag-blue   { background: #162040; color: #4f8fff; }
+.tag-green  { background: #0e2218; color: #22c55e; }
+.tag-orange { background: #251a06; color: #f59e0b; }
+.tag-red    { background: #200f0f; color: #ef4444; }
+.tag-gray   { background: #181b28; color: #545878; }
+.tag-purple { background: #181530; color: #a78bfa; }
+.tag-cyan   { background: #0e1e28; color: #38bdf8; }
+
+/* Buttons */
+.btn { padding: 7px 16px; border-radius: 8px; font-size: 12px; cursor: pointer; border: none; display: inline-flex; align-items: center; gap: 5px; transition: all 0.15s; }
+.btn-primary { background: #3b5ef0; color: white; }
+.btn-primary:hover { background: #4f72ff; }
+.btn-primary:disabled { opacity: 0.35; cursor: not-allowed; }
+.btn-ghost { background: #181b28; color: #7a7f9a; border: 1px solid #252838; }
+.btn-ghost:hover { background: #1e2235; color: #a0a8c0; }
+
+/* Progress chain */
+.chain { display: flex; align-items: flex-start; }
+.chain-node { display: flex; flex-direction: column; align-items: center; min-width: 90px; }
+.chain-circle { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; }
+.chain-line { flex: 1; height: 2px; margin-top: 17px; }
+
+/* Step cards */
+.step-card { border-radius: 10px; margin-bottom: 10px; border: 1px solid #1c1f2e; background: #13161f; overflow: hidden; }
+.step-card.done    { border-left: 3px solid #22c55e; }
+.step-card.active  { border-left: 3px solid #3b6ef5; box-shadow: 0 0 0 1px #1e2e5a inset; }
+.step-card.pending { border-left: 3px solid #1c1f2e; opacity: 0.55; }
+.step-card.human   { border-left: 3px solid #f59e0b; background: #14110a; }
+.step-header { padding: 13px 16px; display: flex; align-items: center; gap: 10px; }
+.step-num { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; flex-shrink: 0; }
+.step-body { padding: 0 16px 14px; }
+
+/* Option cards */
+.opt-card { border: 1px solid #1c1f2e; border-radius: 8px; padding: 12px 14px; cursor: pointer; transition: all 0.15s; margin-bottom: 8px; }
+.opt-card:hover { border-color: #3b6ef5; background: #141a2e; }
+.opt-card.selected { border-color: #3b6ef5; background: #111d40; }
+
+/* Table */
+.tbl { width: 100%; border-collapse: collapse; }
+.tbl th { text-align: left; padding: 10px 14px; font-size: 11px; color: #4a4f68; font-weight: 500; letter-spacing: 0.05em; border-bottom: 1px solid #1c1f2e; }
+.tbl td { padding: 11px 14px; font-size: 13px; border-bottom: 1px solid #0f1118; }
+.tbl tr:last-child td { border-bottom: none; }
+.tbl tr.clickable { cursor: pointer; }
+.tbl tr.clickable:hover td { background: #111420; }
+
+/* Output box */
+.out-box { background: #0b0d14; border: 1px solid #181b28; border-radius: 6px; padding: 12px 14px; font-size: 12px; color: #7a7f9a; }
+.out-label { font-size: 10px; color: #4a4f68; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 3px; }
+.out-val { font-size: 12px; color: #a8b0c8; line-height: 1.5; }
+
+/* Loading animation */
+.loading-bar { height: 3px; border-radius: 2px; background: linear-gradient(90deg, #3b6ef5, #7c3aed, #3b6ef5); background-size: 200%; animation: shimmer 1.4s infinite; }
+@keyframes shimmer { 0%{background-position:200%} 100%{background-position:-200%} }
+.pulse { animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.45} }
+
+/* Misc */
+.divider { height: 1px; background: #1c1f2e; margin: 16px 0; }
+.icon-box { width: 36px; height: 36px; border-radius: 9px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.mini-stat { display: flex; justify-content: space-between; padding: 5px 0; }
+.mini-stat-label { font-size: 11px; color: #545878; }
+.mini-stat-val { font-size: 11px; color: #a8b0c8; }
+</style>
+</head>
+<body>
+<div class="layout">
+
+<!-- ═══════════════════════════════════ SIDEBAR ═══════════════════════════════════ -->
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon">零</div>
+    <div>
+      <div style="font-size:13px;font-weight:600;color:#d8dcea;">零跑小红书</div>
+      <div style="font-size:11px;color:#4a4f68;">AI 工作台</div>
+    </div>
+  </div>
+
+  <div class="sidebar-cycle">
+    <div style="font-size:10px;color:#383c52;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">当前周期</div>
+    <div style="font-size:13px;font-weight:500;color:#c0c8e0;">2026年6月</div>
+    <div style="display:flex;align-items:center;gap:5px;margin-top:4px;">
+      <span class="pulse" style="width:6px;height:6px;border-radius:50%;background:#3b6ef5;display:inline-block;"></span>
+      <span style="font-size:11px;color:#4f7ef7;">内容执行中</span>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-item active" id="nav-dashboard" onclick="nav('dashboard',this)">
+      <i class="fa fa-th-large" style="color:#4f7ef7;width:15px;text-align:center;"></i> 工作台首页
+    </div>
+    <div class="nav-item" id="nav-monthly" onclick="nav('monthly',this)">
+      <i class="fa fa-calendar" style="color:#a78bfa;width:15px;text-align:center;"></i> 月度运营台
+    </div>
+    <div class="nav-item" id="nav-projects" onclick="nav('projects',this)">
+      <i class="fa fa-list-ul" style="color:#22c55e;width:15px;text-align:center;"></i> 内容项目
+      <span class="nav-badge">3</span>
+    </div>
+    <div class="nav-item" id="nav-data" onclick="nav('data',this)">
+      <i class="fa fa-bar-chart" style="color:#fbbf24;width:15px;text-align:center;"></i> 数据与舆情
+    </div>
+    <div class="nav-item" id="nav-competitor" onclick="nav('competitor',this)">
+      <i class="fa fa-eye" style="color:#f87171;width:15px;text-align:center;"></i> 竞品监测
+    </div>
+    <div class="nav-section">知识库</div>
+    <div class="nav-item">
+      <i class="fa fa-book" style="color:#383c52;width:15px;text-align:center;"></i>
+      <span style="color:#444860;">品牌规范</span>
+    </div>
+    <div class="nav-item">
+      <i class="fa fa-car" style="color:#383c52;width:15px;text-align:center;"></i>
+      <span style="color:#444860;">车型信息库</span>
+    </div>
+  </nav>
+
+  <div class="sidebar-team">
+    <div style="font-size:10px;color:#383c52;margin-bottom:8px;">团队成员</div>
+    <div style="display:flex;align-items:center;gap:6px;">
+      <div class="avatar" style="background:linear-gradient(135deg,#ec4899,#ef4444);">
+        梓<span class="online-dot" style="background:#22c55e;"></span>
+      </div>
+      <div class="avatar" style="background:linear-gradient(135deg,#3b82f6,#06b6d4);">
+        思<span class="online-dot" style="background:#22c55e;"></span>
+      </div>
+      <div class="avatar" style="background:linear-gradient(135deg,#8b5cf6,#6366f1);">
+        霍<span class="online-dot" style="background:#545878;"></span>
+      </div>
+      <span style="font-size:11px;color:#383c52;margin-left:3px;">2 在线</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════ MAIN ═══════════════════════════════════ -->
+<div class="main">
+
+<!-- ─────── PAGE: DASHBOARD ─────── -->
+<div id="page-dashboard" class="page active">
+  <div style="margin-bottom:24px;">
+    <h1 style="font-size:20px;font-weight:600;color:#e0e5f5;margin-bottom:3px;">工作台</h1>
+    <p style="font-size:13px;color:#4a4f68;">零跑小红书 · 2026年6月运营周期</p>
+  </div>
+
+  <!-- Chain progress -->
+  <div class="card" style="padding:22px;margin-bottom:20px;">
+    <div style="font-size:11px;color:#4a4f68;text-transform:uppercase;letter-spacing:.08em;margin-bottom:18px;">本月链路进度</div>
+    <div class="chain">
+      <div class="chain-node">
+        <div class="chain-circle" style="background:#0e2218;border:2px solid #22c55e;">
+          <i class="fa fa-check" style="color:#22c55e;font-size:12px;"></i>
+        </div>
+        <div style="font-size:11px;color:#22c55e;margin-top:7px;text-align:center;">规划制定</div>
+        <div style="font-size:10px;color:#2a4a2a;margin-top:2px;">已完成</div>
+      </div>
+      <div class="chain-line" style="background:#22c55e;"></div>
+      <div class="chain-node">
+        <div class="chain-circle" style="background:#162040;border:2px solid #3b6ef5;color:#4f7ef7;">2</div>
+        <div style="font-size:11px;color:#4f7ef7;margin-top:7px;text-align:center;">内容执行</div>
+        <div style="font-size:10px;color:#304878;margin-top:2px;">15个项目</div>
+      </div>
+      <div class="chain-line" style="background:linear-gradient(90deg,#3b6ef5,#252838);"></div>
+      <div class="chain-node">
+        <div class="chain-circle" style="background:#111420;border:2px solid #252838;color:#353850;">3</div>
+        <div style="font-size:11px;color:#353850;margin-top:7px;text-align:center;">数据复盘</div>
+        <div style="font-size:10px;color:#252838;margin-top:2px;">待启动</div>
+      </div>
+      <div class="chain-line" style="background:#1c1f2e;"></div>
+      <div class="chain-node">
+        <div class="chain-circle" style="background:#111420;border:2px solid #252838;color:#353850;">4</div>
+        <div style="font-size:11px;color:#353850;margin-top:7px;text-align:center;">舆情归档</div>
+        <div style="font-size:10px;color:#252838;margin-top:2px;">待启动</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Module cards 2×2 -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+    <div class="module-card" onclick="nav('monthly',document.getElementById('nav-monthly'))">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;">
+        <div class="icon-box" style="background:#1a1535;"><i class="fa fa-calendar" style="color:#a78bfa;font-size:17px;"></i></div>
+        <span style="font-size:26px;color:#1c1f2e;font-weight:700;font-family:monospace;">01</span>
+      </div>
+      <div style="font-size:15px;font-weight:600;color:#d0d8ec;margin-bottom:5px;">月度运营台</div>
+      <div style="font-size:12px;color:#444860;margin-bottom:14px;">月度规划 · 月度复盘 · 台账管理</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        <span class="tag tag-green">规划已完成</span>
+        <span class="tag tag-gray">复盘待启动</span>
+      </div>
+    </div>
+
+    <div class="module-card" style="border-color:#1e2e55;background:#111828;" onclick="nav('projects',document.getElementById('nav-projects'))">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;">
+        <div class="icon-box" style="background:#0e1e35;"><i class="fa fa-list-ul" style="color:#3b9eff;font-size:17px;"></i></div>
+        <span style="font-size:26px;color:#152035;font-weight:700;font-family:monospace;">02</span>
+      </div>
+      <div style="font-size:15px;font-weight:600;color:#d0d8ec;margin-bottom:5px;">内容项目</div>
+      <div style="font-size:12px;color:#444860;margin-bottom:14px;">达人脚本创作全流程</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        <span class="tag tag-blue">12 进行中</span>
+        <span class="tag tag-orange">3 等待PM审核</span>
+        <span class="tag tag-green">2 已通过</span>
+      </div>
+    </div>
+
+    <div class="module-card" onclick="nav('data',document.getElementById('nav-data'))">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;">
+        <div class="icon-box" style="background:#1a1508;"><i class="fa fa-bar-chart" style="color:#fbbf24;font-size:17px;"></i></div>
+        <span style="font-size:26px;color:#201e08;font-weight:700;font-family:monospace;">03</span>
+      </div>
+      <div style="font-size:15px;font-weight:600;color:#d0d8ec;margin-bottom:5px;">数据与舆情</div>
+      <div style="font-size:12px;color:#444860;margin-bottom:14px;">KPI 看板 · 舆情报告生成</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        <span class="tag tag-green">看板已更新</span>
+        <span class="tag tag-gray">舆情: 6/8</span>
+      </div>
+    </div>
+
+    <div class="module-card" onclick="nav('competitor',document.getElementById('nav-competitor'))">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;">
+        <div class="icon-box" style="background:#180f0f;"><i class="fa fa-eye" style="color:#f87171;font-size:17px;"></i></div>
+        <span style="font-size:26px;color:#200e0e;font-weight:700;font-family:monospace;">04</span>
+      </div>
+      <div style="font-size:15px;font-weight:600;color:#d0d8ec;margin-bottom:5px;">竞品监测</div>
+      <div style="font-size:12px;color:#444860;margin-bottom:14px;">竞品场域动态实时追踪</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        <span class="tag tag-gray">上次: 6/10</span>
+        <span class="tag tag-red">1条新动态</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─────── PAGE: PROJECTS LIST ─────── -->
+<div id="page-projects" class="page">
+  <div style="display:flex;align-items:center;margin-bottom:20px;">
+    <div>
+      <h1 style="font-size:18px;font-weight:600;color:#e0e5f5;margin-bottom:2px;">内容项目</h1>
+      <p style="font-size:12px;color:#4a4f68;">2026年6月 · 共 15 个达人合作项目</p>
+    </div>
+    <div style="margin-left:auto;display:flex;gap:8px;">
+      <button class="btn btn-ghost"><i class="fa fa-filter"></i> 筛选</button>
+      <button class="btn btn-ghost" style="opacity:.5;cursor:not-allowed;" title="由飞书多维表格自动同步">
+        <i class="fa fa-table"></i> 飞书同步
+      </button>
+    </div>
+  </div>
+
+  <!-- Filter pills -->
+  <div style="display:flex;gap:8px;margin-bottom:16px;">
+    <span style="background:#162040;color:#4f8fff;padding:4px 13px;border-radius:20px;font-size:12px;cursor:pointer;border:1px solid #253060;">全部 15</span>
+    <span style="background:transparent;color:#545878;padding:4px 13px;border-radius:20px;font-size:12px;cursor:pointer;border:1px solid #1c1f2e;">进行中 12</span>
+    <span style="background:transparent;color:#545878;padding:4px 13px;border-radius:20px;font-size:12px;cursor:pointer;border:1px solid #1c1f2e;display:flex;align-items:center;gap:5px;">等待审核<span style="background:#c2500a;color:white;font-size:10px;border-radius:9px;padding:0 5px;font-weight:700;">3</span></span>
+    <span style="background:transparent;color:#545878;padding:4px 13px;border-radius:20px;font-size:12px;cursor:pointer;border:1px solid #1c1f2e;">已完成 2</span>
+  </div>
+
+  <div class="card" style="overflow:hidden;">
+    <table class="tbl">
+      <thead>
+        <tr>
+          <th>达人账号</th><th>车型</th><th>负责人</th><th>当前步骤</th><th>状态</th><th>最近更新</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="clickable" onclick="showDetail()">
+          <td><div style="display:flex;align-items:center;gap:9px;">
+            <div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#f97316,#ec4899);flex-shrink:0;"></div>
+            <div><div style="font-size:13px;color:#c0c8e0;">@美食与旅行</div><div style="font-size:11px;color:#545878;">23.6万粉</div></div>
+          </div></td>
+          <td><span class="tag tag-blue">C10</span></td>
+          <td style="color:#8892b0;">梓琳</td>
+          <td><div style="display:flex;align-items:center;gap:6px;"><span style="width:6px;height:6px;border-radius:50%;background:#3b6ef5;display:inline-block;"></span><span style="font-size:12px;color:#7a80a0;">Step 3 · 选题方向</span></div></td>
+          <td><span class="tag tag-blue">进行中</span></td>
+          <td style="font-size:12px;color:#545878;">10分钟前</td>
+        </tr>
+        <tr class="clickable" onclick="showDetail()">
+          <td><div style="display:flex;align-items:center;gap:9px;">
+            <div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#06b6d4);flex-shrink:0;"></div>
+            <div><div style="font-size:13px;color:#c0c8e0;">@城市漫游者</div><div style="font-size:11px;color:#545878;">48.2万粉</div></div>
+          </div></td>
+          <td><span class="tag tag-blue">C10</span></td>
+          <td style="color:#8892b0;">梓琳</td>
+          <td><div style="display:flex;align-items:center;gap:6px;"><span style="width:6px;height:6px;border-radius:50%;background:#f59e0b;display:inline-block;"></span><span style="font-size:12px;color:#7a80a0;">Step 7 · PM终审</span></div></td>
+          <td><span class="tag tag-orange">等待PM审核</span></td>
+          <td style="font-size:12px;color:#545878;">2小时前</td>
+        </tr>
+        <tr class="clickable" onclick="showDetail()">
+          <td><div style="display:flex;align-items:center;gap:9px;">
+            <div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#22c55e,#06b6d4);flex-shrink:0;"></div>
+            <div><div style="font-size:13px;color:#c0c8e0;">@开车的小王</div><div style="font-size:11px;color:#545878;">15.8万粉</div></div>
+          </div></td>
+          <td><span class="tag tag-purple">B11</span></td>
+          <td style="color:#8892b0;">思琦</td>
+          <td><div style="display:flex;align-items:center;gap:6px;"><span style="width:6px;height:6px;border-radius:50%;background:#f59e0b;display:inline-block;"></span><span style="font-size:12px;color:#7a80a0;">Step 7 · PM终审</span></div></td>
+          <td><span class="tag tag-orange">等待PM审核</span></td>
+          <td style="font-size:12px;color:#545878;">昨天</td>
+        </tr>
+        <tr class="clickable" onclick="showDetail()">
+          <td><div style="display:flex;align-items:center;gap:9px;">
+            <div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#a78bfa,#ec4899);flex-shrink:0;"></div>
+            <div><div style="font-size:13px;color:#c0c8e0;">@日常碎碎念</div><div style="font-size:11px;color:#545878;">31.4万粉</div></div>
+          </div></td>
+          <td><span class="tag tag-cyan">C16</span></td>
+          <td style="color:#8892b0;">思琦</td>
+          <td><div style="display:flex;align-items:center;gap:6px;"><span style="width:6px;height:6px;border-radius:50%;background:#3b6ef5;display:inline-block;"></span><span style="font-size:12px;color:#7a80a0;">Step 2 · 卖点提炼</span></div></td>
+          <td><span class="tag tag-blue">进行中</span></td>
+          <td style="font-size:12px;color:#545878;">1小时前</td>
+        </tr>
+        <tr class="clickable" onclick="showDetail()">
+          <td><div style="display:flex;align-items:center;gap:9px;">
+            <div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#ef4444,#f97316);flex-shrink:0;"></div>
+            <div><div style="font-size:13px;color:#c0c8e0;">@北京自驾游</div><div style="font-size:11px;color:#545878;">19.2万粉</div></div>
+          </div></td>
+          <td><span class="tag tag-purple">B11</span></td>
+          <td style="color:#8892b0;">梓琳</td>
+          <td><div style="display:flex;align-items:center;gap:6px;"><span style="width:6px;height:6px;border-radius:50%;background:#ef4444;display:inline-block;"></span><span style="font-size:12px;color:#7a80a0;">Step 5 · 正文生成</span></div></td>
+          <td><span class="tag tag-red">需修改</span></td>
+          <td style="font-size:12px;color:#545878;">昨天</td>
+        </tr>
+        <tr class="clickable" onclick="showDetail()">
+          <td><div style="display:flex;align-items:center;gap:9px;">
+            <div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#06b6d4,#3b82f6);flex-shrink:0;"></div>
+            <div><div style="font-size:13px;color:#c0c8e0;">@探店达人李</div><div style="font-size:11px;color:#545878;">52.1万粉</div></div>
+          </div></td>
+          <td><span class="tag tag-cyan">C16</span></td>
+          <td style="color:#8892b0;">梓琳</td>
+          <td><div style="display:flex;align-items:center;gap:6px;"><i class="fa fa-check" style="color:#22c55e;font-size:10px;"></i><span style="font-size:12px;color:#22c55e;">全部完成</span></div></td>
+          <td><span class="tag tag-green">已通过</span></td>
+          <td style="font-size:12px;color:#545878;">3天前</td>
+        </tr>
+        <tr class="clickable" onclick="showDetail()">
+          <td><div style="display:flex;align-items:center;gap:9px;">
+            <div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#fbbf24,#22c55e);flex-shrink:0;"></div>
+            <div><div style="font-size:13px;color:#c0c8e0;">@生活日记本</div><div style="font-size:11px;color:#545878;">8.9万粉</div></div>
+          </div></td>
+          <td><span class="tag tag-blue">C10</span></td>
+          <td style="color:#8892b0;">思琦</td>
+          <td><div style="display:flex;align-items:center;gap:6px;"><span style="width:6px;height:6px;border-radius:50%;background:#545878;display:inline-block;"></span><span style="font-size:12px;color:#545878;">Step 1 · Brief解析</span></div></td>
+          <td><span class="tag tag-gray">待开始</span></td>
+          <td style="font-size:12px;color:#545878;">2天前</td>
+        </tr>
+      </tbody>
+    </table>
+    <div style="padding:11px 16px;font-size:12px;color:#383c52;text-align:center;">显示 7 / 15 条 · <span style="color:#4f7ef7;cursor:pointer;">查看全部</span></div>
+  </div>
+</div>
+
+<!-- ─────── PAGE: PROJECT DETAIL ─────── -->
+<div id="page-detail" class="page" style="padding:0;">
+  <!-- Topbar -->
+  <div style="padding:13px 24px;border-bottom:1px solid #1c1f2e;display:flex;align-items:center;gap:8px;flex-shrink:0;background:#0b0d14;position:sticky;top:0;z-index:10;">
+    <button onclick="nav('projects',document.getElementById('nav-projects'))" style="background:none;border:none;color:#545878;cursor:pointer;font-size:13px;padding:4px 6px;border-radius:5px;display:flex;align-items:center;gap:5px;" onmouseover="this.style.background='#181b28'" onmouseout="this.style.background='none'">
+      <i class="fa fa-arrow-left"></i>
+    </button>
+    <span style="font-size:12px;color:#545878;cursor:pointer;" onclick="nav('projects',document.getElementById('nav-projects'))">内容项目</span>
+    <span style="color:#2a2d3e;font-size:14px;">/</span>
+    <span style="font-size:13px;color:#c0c8e0;">@美食与旅行</span>
+    <span class="tag tag-blue" style="margin-left:4px;">C10</span>
+    <div style="margin-left:auto;display:flex;gap:8px;">
+      <button class="btn btn-ghost"><i class="fa fa-share-alt"></i> 分享</button>
+      <button class="btn btn-ghost"><i class="fa fa-download"></i> 导出</button>
+    </div>
+  </div>
+
+  <!-- Body: left info + right steps -->
+  <div style="display:flex;height:calc(100% - 50px);overflow:hidden;">
+    <!-- Left panel -->
+    <div style="width:232px;flex-shrink:0;border-right:1px solid #1c1f2e;overflow-y:auto;padding:18px;">
+      <div style="text-align:center;margin-bottom:16px;">
+        <div style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#f97316,#ec4899);margin:0 auto 8px;"></div>
+        <div style="font-size:14px;font-weight:600;color:#d0d8ec;">@美食与旅行</div>
+        <div style="font-size:11px;color:#545878;margin-top:2px;">23.6万粉丝 · 生活方式</div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:4px;justify-content:center;margin-bottom:14px;">
+        <span class="tag tag-blue">C10</span>
+        <span class="tag tag-gray">美食探店</span>
+        <span class="tag tag-gray">生活方式</span>
+      </div>
+
+      <div class="card" style="padding:12px;border-radius:8px;margin-bottom:10px;">
+        <div style="font-size:10px;color:#383c52;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">账号数据</div>
+        <div class="mini-stat"><span class="mini-stat-label">平均互动率</span><span style="font-size:11px;color:#4f8fff;">1.87%</span></div>
+        <div class="mini-stat"><span class="mini-stat-label">近30天笔记</span><span class="mini-stat-val">12 篇</span></div>
+        <div class="mini-stat"><span class="mini-stat-label">报价参考</span><span style="font-size:11px;color:#22c55e;">¥8,000</span></div>
+      </div>
+
+      <div class="card" style="padding:12px;border-radius:8px;margin-bottom:14px;">
+        <div style="font-size:10px;color:#383c52;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">项目信息</div>
+        <div class="mini-stat"><span class="mini-stat-label">负责人</span><span class="mini-stat-val">梓琳</span></div>
+        <div class="mini-stat"><span class="mini-stat-label">创建时间</span><span class="mini-stat-val">6月9日</span></div>
+        <div class="mini-stat"><span class="mini-stat-label">数据来源</span>
+          <span style="font-size:11px;color:#383c52;display:flex;align-items:center;gap:3px;"><i class="fa fa-table" style="font-size:9px;"></i> 飞书同步</span>
+        </div>
+      </div>
+
+      <!-- Step nav -->
+      <div style="font-size:10px;color:#383c52;text-transform:uppercase;letter-spacing:.06em;margin-bottom:7px;">步骤导航</div>
+      <div id="step-nav" style="display:flex;flex-direction:column;gap:1px;">
+        <div style="padding:6px 8px;border-radius:4px;background:#0e2218;display:flex;align-items:center;gap:6px;">
+          <i class="fa fa-check-circle" style="color:#22c55e;font-size:11px;"></i>
+          <span style="font-size:11px;color:#22c55e;">1 · Brief 解析</span>
+        </div>
+        <div style="padding:6px 8px;border-radius:4px;background:#0e2218;display:flex;align-items:center;gap:6px;">
+          <i class="fa fa-check-circle" style="color:#22c55e;font-size:11px;"></i>
+          <span style="font-size:11px;color:#22c55e;">2 · 卖点提炼</span>
+        </div>
+        <div id="nav3" style="padding:6px 8px;border-radius:4px;background:#162040;display:flex;align-items:center;gap:6px;">
+          <i class="fa fa-circle" style="color:#4f7ef7;font-size:11px;"></i>
+          <span style="font-size:11px;color:#4f7ef7;font-weight:500;">3 · 选题方向</span>
+        </div>
+        <div id="nav4" style="padding:6px 8px;border-radius:4px;display:flex;align-items:center;gap:6px;opacity:.4;">
+          <i class="fa fa-circle-o" style="color:#353850;font-size:11px;"></i>
+          <span style="font-size:11px;color:#353850;">4 · 脚本大纲</span>
+        </div>
+        <div style="padding:6px 8px;border-radius:4px;display:flex;align-items:center;gap:6px;opacity:.4;">
+          <i class="fa fa-circle-o" style="color:#353850;font-size:11px;"></i>
+          <span style="font-size:11px;color:#353850;">5 · 正文生成</span>
+        </div>
+        <div style="padding:6px 8px;border-radius:4px;display:flex;align-items:center;gap:6px;opacity:.4;">
+          <i class="fa fa-circle-o" style="color:#353850;font-size:11px;"></i>
+          <span style="font-size:11px;color:#353850;">6 · 合规预检</span>
+        </div>
+        <div style="padding:6px 8px;border-radius:4px;display:flex;align-items:center;gap:6px;opacity:.4;">
+          <i class="fa fa-user" style="color:#a07030;font-size:11px;"></i>
+          <span style="font-size:11px;color:#504020;">7 · PM 终审</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: workflow steps -->
+    <div style="flex:1;overflow-y:auto;padding:20px 24px;">
+
+      <!-- Step 1: Done -->
+      <div class="step-card done">
+        <div class="step-header" style="cursor:pointer;" onclick="toggleOut('out1','chev1')">
+          <div class="step-num" style="background:#0e2218;border:1.5px solid #22c55e;">
+            <i class="fa fa-check" style="color:#22c55e;font-size:9px;"></i>
+          </div>
+          <span style="font-size:11px;color:#2a4a2a;font-weight:600;flex-shrink:0;">STEP 1</span>
+          <span style="font-size:14px;font-weight:500;color:#7ab87a;">Brief 解析</span>
+          <span class="tag tag-green" style="margin-left:8px;">已完成</span>
+          <span style="margin-left:auto;font-size:11px;color:#2a4a2a;">6月9日 10:23</span>
+          <i id="chev1" class="fa fa-chevron-down" style="color:#2a4a2a;font-size:10px;margin-left:8px;transition:transform .2s;"></i>
+        </div>
+        <div id="out1" style="display:none;" class="step-body">
+          <div class="out-box">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+              <div><div class="out-label">核心诉求</div><div class="out-val">突出C10智能驾驶辅助和城市空间优势</div></div>
+              <div><div class="out-label">目标受众</div><div class="out-val">25-35岁城市白领，有购车需求</div></div>
+              <div><div class="out-label">内容调性</div><div class="out-val">真实日常，生活感强，避免硬广感</div></div>
+              <div><div class="out-label">禁忌事项</div><div style="font-size:12px;color:#c07070;">不与竞品直接对比 · 不夸大续航数据</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2: Done -->
+      <div class="step-card done">
+        <div class="step-header" style="cursor:pointer;" onclick="toggleOut('out2','chev2')">
+          <div class="step-num" style="background:#0e2218;border:1.5px solid #22c55e;">
+            <i class="fa fa-check" style="color:#22c55e;font-size:9px;"></i>
+          </div>
+          <span style="font-size:11px;color:#2a4a2a;font-weight:600;flex-shrink:0;">STEP 2</span>
+          <span style="font-size:14px;font-weight:500;color:#7ab87a;">卖点提炼</span>
+          <span class="tag tag-green" style="margin-left:8px;">已完成</span>
+          <span style="margin-left:auto;font-size:11px;color:#2a4a2a;">6月9日 10:24</span>
+          <i id="chev2" class="fa fa-chevron-down" style="color:#2a4a2a;font-size:10px;margin-left:8px;transition:transform .2s;"></i>
+        </div>
+        <div id="out2" style="display:none;" class="step-body">
+          <div class="out-box" style="display:flex;flex-direction:column;gap:9px;">
+            <div style="display:flex;align-items:flex-start;gap:8px;">
+              <span class="tag tag-blue" style="flex-shrink:0;margin-top:1px;">卖点1</span>
+              <span class="out-val"><strong style="color:#c0c8e0;">城市代驾黑科技</strong> · AEB自动紧急制动，堵车不累不焦虑</span>
+            </div>
+            <div style="display:flex;align-items:flex-start;gap:8px;">
+              <span class="tag tag-blue" style="flex-shrink:0;margin-top:1px;">卖点2</span>
+              <span class="out-val"><strong style="color:#c0c8e0;">后排大空间</strong> · 1.05m超大腿部空间，同级家用首选</span>
+            </div>
+            <div style="display:flex;align-items:flex-start;gap:8px;">
+              <span class="tag tag-blue" style="flex-shrink:0;margin-top:1px;">卖点3</span>
+              <span class="out-val"><strong style="color:#c0c8e0;">价格门槛低</strong> · 15万出头，同级最低月供圆电车梦</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3: Active - Topic Selection -->
+      <div class="step-card active" id="step3-card">
+        <div class="step-header">
+          <div class="step-num" style="background:#162040;border:1.5px solid #3b6ef5;color:#4f7ef7;">3</div>
+          <span style="font-size:11px;color:#2a3f70;font-weight:600;flex-shrink:0;">STEP 3</span>
+          <span style="font-size:14px;font-weight:600;color:#7aaaff;">选题方向</span>
+          <span class="tag tag-blue" style="margin-left:8px;">待确认</span>
+        </div>
+        <div class="step-body" style="padding-top:0;">
+          <p style="font-size:12px;color:#545878;margin-bottom:14px;">选择最适合该达人风格的内容切入角度，选定后进入脚本大纲生成</p>
+          <div id="opts">
+            <div class="opt-card" id="opt-a" onclick="pickOpt('a')">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">
+                <div style="display:flex;align-items:center;gap:7px;">
+                  <span style="background:#162040;color:#4f8fff;font-size:10px;padding:1px 7px;border-radius:3px;font-weight:700;">A</span>
+                  <span style="font-size:13px;font-weight:500;color:#c0c8e0;">城市通勤救星</span>
+                </div>
+                <i id="r-a" class="fa fa-circle-o" style="color:#252838;font-size:15px;"></i>
+              </div>
+              <p style="font-size:11px;color:#545878;margin-bottom:4px;">真实堵车场景展示智驾辅助的日常价值，科技感 + 生活感并重</p>
+              <span style="font-size:10px;color:#383c52;"><i class="fa fa-tag" style="margin-right:3px;"></i>适合通勤族、科技感人设</span>
+            </div>
+            <div class="opt-card" id="opt-b" onclick="pickOpt('b')">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">
+                <div style="display:flex;align-items:center;gap:7px;">
+                  <span style="background:#162040;color:#4f8fff;font-size:10px;padding:1px 7px;border-radius:3px;font-weight:700;">B</span>
+                  <span style="font-size:13px;font-weight:500;color:#c0c8e0;">全家出行好帮手</span>
+                </div>
+                <i id="r-b" class="fa fa-circle-o" style="color:#252838;font-size:15px;"></i>
+              </div>
+              <p style="font-size:11px;color:#545878;margin-bottom:4px;">以家庭视角展示空间和舒适性，亲子出行场景，情感共鸣强</p>
+              <span style="font-size:10px;color:#383c52;"><i class="fa fa-tag" style="margin-right:3px;"></i>适合家庭类达人、亲子内容</span>
+            </div>
+            <div class="opt-card" id="opt-c" onclick="pickOpt('c')">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">
+                <div style="display:flex;align-items:center;gap:7px;">
+                  <span style="background:#162040;color:#4f8fff;font-size:10px;padding:1px 7px;border-radius:3px;font-weight:700;">C</span>
+                  <span style="font-size:13px;font-weight:500;color:#c0c8e0;">我的第一台电车</span>
+                </div>
+                <i id="r-c" class="fa fa-circle-o" style="color:#252838;font-size:15px;"></i>
+              </div>
+              <p style="font-size:11px;color:#545878;margin-bottom:4px;">以首次购车者视角讲价值感，15万出头、科技配置、零焦虑</p>
+              <span style="font-size:10px;color:#383c52;"><i class="fa fa-tag" style="margin-right:3px;"></i>适合买车攻略类、知识分享类达人</span>
+            </div>
+          </div>
+          <div style="margin-top:14px;display:flex;align-items:center;gap:10px;">
+            <button class="btn btn-primary" id="confirm-btn" onclick="confirmStep3()" disabled>确认并继续 →</button>
+            <span style="font-size:11px;color:#383c52;">选择后可在下一步修改</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 4: Pending -->
+      <div class="step-card pending" id="step4-card">
+        <div class="step-header">
+          <div class="step-num" style="background:#111420;border:1.5px solid #252838;color:#353850;">4</div>
+          <span style="font-size:11px;color:#252838;font-weight:600;flex-shrink:0;">STEP 4</span>
+          <span style="font-size:14px;font-weight:500;color:#353850;">脚本大纲</span>
+          <span class="tag tag-gray" style="margin-left:8px;">待执行</span>
+        </div>
+      </div>
+
+      <!-- Step 5: Pending -->
+      <div class="step-card pending">
+        <div class="step-header">
+          <div class="step-num" style="background:#111420;border:1.5px solid #252838;color:#353850;">5</div>
+          <span style="font-size:11px;color:#252838;font-weight:600;flex-shrink:0;">STEP 5</span>
+          <span style="font-size:14px;font-weight:500;color:#353850;">正文逐段生成</span>
+          <span class="tag tag-gray" style="margin-left:8px;">待执行</span>
+        </div>
+      </div>
+
+      <!-- Step 6: Pending -->
+      <div class="step-card pending">
+        <div class="step-header">
+          <div class="step-num" style="background:#111420;border:1.5px solid #252838;color:#353850;">6</div>
+          <span style="font-size:11px;color:#252838;font-weight:600;flex-shrink:0;">STEP 6</span>
+          <span style="font-size:14px;font-weight:500;color:#353850;">品牌合规预检</span>
+          <span class="tag tag-gray" style="margin-left:8px;">待执行</span>
+        </div>
+      </div>
+
+      <!-- Step 7: Human checkpoint -->
+      <div class="step-card human">
+        <div class="step-header">
+          <div class="step-num" style="background:#201508;border:1.5px solid #f59e0b;">
+            <i class="fa fa-user" style="color:#f59e0b;font-size:9px;"></i>
+          </div>
+          <span style="font-size:11px;color:#604510;font-weight:600;flex-shrink:0;">STEP 7</span>
+          <span style="font-size:14px;font-weight:600;color:#c07830;">PM 终审</span>
+          <span class="tag tag-orange" style="margin-left:8px;">人工卡口</span>
+        </div>
+        <div class="step-body" style="padding-top:0;">
+          <p style="font-size:12px;color:#604510;line-height:1.6;">此步骤需要序列 PM / 内容 PM 人工审核，AI 无法代为完成。<br>脚本到达此步骤后将自动通知负责人介入。</p>
+        </div>
+      </div>
+
+    </div><!-- end steps -->
+  </div><!-- end body -->
+</div><!-- end detail page -->
+
+<!-- ─────── PAGE: MONTHLY OPS ─────── -->
+<div id="page-monthly" class="page">
+  <div style="margin-bottom:22px;">
+    <h1 style="font-size:18px;font-weight:600;color:#e0e5f5;margin-bottom:2px;">月度运营台</h1>
+    <p style="font-size:12px;color:#4a4f68;">2026年6月 · 月度级别工具</p>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:16px;">
+
+    <!-- 月度规划 -->
+    <div class="card" style="padding:20px;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+        <div class="icon-box" style="background:#1a1535;"><i class="fa fa-map" style="color:#a78bfa;"></i></div>
+        <div>
+          <div style="font-size:14px;font-weight:600;color:#d0d8ec;">月度规划生成</div>
+          <div style="font-size:11px;color:#545878;">上次生成: 6月1日 · 工作流 5步</div>
+        </div>
+        <span class="tag tag-green" style="margin-left:auto;">已完成</span>
+      </div>
+      <div style="background:#0b0d14;border:1px solid #1c1f2e;border-radius:8px;padding:14px;margin-bottom:14px;">
+        <div style="font-size:12px;color:#545878;margin-bottom:6px;">本月规划预览</div>
+        <div style="font-size:13px;color:#c0c8e0;font-weight:500;margin-bottom:7px;">2026年6月 · C10「城市智能生活」传播方案</div>
+        <div style="font-size:12px;color:#7a80a0;line-height:1.7;">主题：以「城市智能生活」为内容矩阵，覆盖通勤、家庭、首购三大场景，以真实用车体验为核心内容形式。达人配比：头部2 / 腰部6 / 尾部7，预算分配向腰部倾斜...</div>
+        <button style="background:none;border:none;color:#4f7ef7;font-size:11px;cursor:pointer;padding:0;margin-top:6px;">查看完整方案 →</button>
+      </div>
+      <button class="btn btn-ghost"><i class="fa fa-refresh"></i> 重新生成</button>
+    </div>
+
+    <!-- 月度复盘 -->
+    <div class="card" style="padding:20px;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+        <div class="icon-box" style="background:#0e2218;"><i class="fa fa-line-chart" style="color:#22c55e;"></i></div>
+        <div>
+          <div style="font-size:14px;font-weight:600;color:#d0d8ec;">月度复盘生成</div>
+          <div style="font-size:11px;color:#545878;">月末触发 · 当前月份进行中</div>
+        </div>
+        <span class="tag tag-gray" style="margin-left:auto;">待启动</span>
+      </div>
+      <div style="background:#0b0d14;border:1px solid #1c1f2e;border-radius:8px;padding:14px;margin-bottom:14px;opacity:.5;text-align:center;">
+        <span style="font-size:12px;color:#545878;">月末自动开放 · 或手动上传数据提前生成</span>
+      </div>
+      <button class="btn btn-ghost" style="opacity:.45;cursor:not-allowed;"><i class="fa fa-upload"></i> 上传数据提前生成</button>
+    </div>
+
+    <!-- 台账看板 -->
+    <div class="card" style="padding:20px;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+        <div class="icon-box" style="background:#1a1508;"><i class="fa fa-table" style="color:#fbbf24;"></i></div>
+        <div>
+          <div style="font-size:14px;font-weight:600;color:#d0d8ec;">台账看板</div>
+          <div style="font-size:11px;color:#545878;">费用追踪 · 结算状态</div>
+        </div>
+      </div>
+      <div style="margin-bottom:14px;">
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:#545878;margin-bottom:5px;">
+          <span>本月预算使用</span><span>¥38.2万 / ¥80万 <span style="color:#4f7ef7;">(47.75%)</span></span>
+        </div>
+        <div style="height:6px;background:#1c1f2e;border-radius:3px;overflow:hidden;">
+          <div style="height:100%;width:47.75%;background:linear-gradient(90deg,#3b6ef5,#22c55e);border-radius:3px;"></div>
+        </div>
+      </div>
+      <table class="tbl">
+        <thead><tr><th>达人</th><th>车型</th><th>费用</th><th>结算状态</th></tr></thead>
+        <tbody>
+          <tr><td style="color:#c0c8e0;">@探店达人李</td><td><span class="tag tag-cyan">C16</span></td><td style="color:#c0c8e0;">¥15,000</td><td><span class="tag tag-green">已结算</span></td></tr>
+          <tr><td style="color:#c0c8e0;">@城市漫游者</td><td><span class="tag tag-blue">C10</span></td><td style="color:#c0c8e0;">¥12,000</td><td><span class="tag tag-orange">待发布</span></td></tr>
+          <tr><td style="color:#c0c8e0;">@美食与旅行</td><td><span class="tag tag-blue">C10</span></td><td style="color:#c0c8e0;">¥8,000</td><td><span class="tag tag-gray">进行中</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ─────── PAGE: DATA ─────── -->
+<div id="page-data" class="page">
+  <div style="margin-bottom:22px;">
+    <h1 style="font-size:18px;font-weight:600;color:#e0e5f5;margin-bottom:2px;">数据与舆情</h1>
+    <p style="font-size:12px;color:#4a4f68;">KPI 看板 · 舆情报告生成</p>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+    <div class="card" style="padding:20px;">
+      <div style="display:flex;align-items:center;gap:9px;margin-bottom:14px;">
+        <i class="fa fa-bar-chart" style="color:#fbbf24;font-size:16px;"></i>
+        <span style="font-size:14px;font-weight:600;color:#d0d8ec;">KPI 数据看板</span>
+        <span class="tag tag-green" style="margin-left:auto;">v1 运行中</span>
+      </div>
+      <p style="font-size:12px;color:#545878;margin-bottom:14px;">实时 KPI 监控看板，独立系统维护中</p>
+      <button class="btn btn-ghost"><i class="fa fa-external-link"></i> 跳转看板</button>
+    </div>
+    <div class="card" style="padding:20px;">
+      <div style="display:flex;align-items:center;gap:9px;margin-bottom:14px;">
+        <i class="fa fa-comments" style="color:#f87171;font-size:16px;"></i>
+        <span style="font-size:14px;font-weight:600;color:#d0d8ec;">舆情报告生成</span>
+        <span class="tag tag-gray" style="margin-left:auto;">上次: 6/8</span>
+      </div>
+      <p style="font-size:12px;color:#545878;margin-bottom:14px;">基于评论爬取和负面筛选结果，一键生成阶段舆情报告</p>
+      <button class="btn btn-primary"><i class="fa fa-play"></i> 生成本周报告</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─────── PAGE: COMPETITOR ─────── -->
+<div id="page-competitor" class="page">
+  <div style="margin-bottom:22px;">
+    <h1 style="font-size:18px;font-weight:600;color:#e0e5f5;margin-bottom:2px;">竞品监测</h1>
+    <p style="font-size:12px;color:#4a4f68;">竞品场域动态追踪</p>
+  </div>
+  <div class="card" style="padding:20px;max-width:480px;">
+    <div style="display:flex;align-items:center;gap:9px;margin-bottom:14px;">
+      <i class="fa fa-eye" style="color:#f87171;font-size:16px;"></i>
+      <span style="font-size:14px;font-weight:600;color:#d0d8ec;">竞品场域监测 Skill</span>
+      <span class="tag tag-green" style="margin-left:auto;">MCP 已接入</span>
+    </div>
+    <p style="font-size:12px;color:#545878;margin-bottom:14px;">监测比亚迪 / 特斯拉 / 问界等主要竞品在小红书的内容动态，通过外部工具访问</p>
+    <div style="display:flex;align-items:center;gap:4px;margin-bottom:14px;">
+      <span style="font-size:11px;color:#383c52;">注：账号安全风险评估中，暂用独立账号运行</span>
+    </div>
+    <button class="btn btn-ghost"><i class="fa fa-external-link"></i> 进入竞品监测</button>
+  </div>
+</div>
+
+</div><!-- end main -->
+</div><!-- end layout -->
+
+<script>
+// ── Navigation ──
+function nav(pageId, navEl) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + pageId).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  if (navEl) navEl.classList.add('active');
+}
+
+function showDetail() {
+  nav('detail', document.getElementById('nav-projects'));
+}
+
+// ── Step output toggle ──
+function toggleOut(outId, chevId) {
+  const out = document.getElementById(outId);
+  const ch = document.getElementById(chevId);
+  const isHidden = out.style.display === 'none' || out.style.display === '';
+  out.style.display = isHidden ? 'block' : 'none';
+  if (ch) ch.style.transform = isHidden ? 'rotate(180deg)' : '';
+}
+
+// ── Topic option selection ──
+let picked = null;
+function pickOpt(key) {
+  ['a','b','c'].forEach(k => {
+    document.getElementById('opt-' + k).classList.remove('selected');
+    const r = document.getElementById('r-' + k);
+    r.className = 'fa fa-circle-o';
+    r.style.color = '#252838';
+  });
+  document.getElementById('opt-' + key).classList.add('selected');
+  const r = document.getElementById('r-' + key);
+  r.className = 'fa fa-check-circle';
+  r.style.color = '#4f7ef7';
+  picked = key;
+  const btn = document.getElementById('confirm-btn');
+  btn.disabled = false;
+  btn.style.opacity = '1';
+}
+
+// ── Confirm step 3 → activate step 4 ──
+const optLabels = { a: '城市通勤救星', b: '全家出行好帮手', c: '我的第一台电车' };
+function confirmStep3() {
+  if (!picked) return;
+  // Step 3 → done
+  const s3 = document.getElementById('step3-card');
+  s3.className = 'step-card done';
+  s3.innerHTML = `
+    <div class="step-header">
+      <div class="step-num" style="background:#0e2218;border:1.5px solid #22c55e;">
+        <i class="fa fa-check" style="color:#22c55e;font-size:9px;"></i>
+      </div>
+      <span style="font-size:11px;color:#2a4a2a;font-weight:600;flex-shrink:0;">STEP 3</span>
+      <span style="font-size:14px;font-weight:500;color:#7ab87a;">选题方向</span>
+      <span class="tag tag-green" style="margin-left:8px;">已确认</span>
+      <span style="margin-left:8px;font-size:12px;color:#4f9fff;">「${optLabels[picked]}」</span>
+      <span style="margin-left:auto;font-size:11px;color:#2a4a2a;">刚刚</span>
+    </div>`;
+  // Step 4 → active with loading
+  const s4 = document.getElementById('step4-card');
+  s4.className = 'step-card active';
+  s4.innerHTML = `
+    <div class="step-header">
+      <div class="step-num" style="background:#162040;border:1.5px solid #3b6ef5;color:#4f7ef7;">4</div>
+      <span style="font-size:11px;color:#2a3f70;font-weight:600;flex-shrink:0;">STEP 4</span>
+      <span style="font-size:14px;font-weight:600;color:#7aaaff;">脚本大纲生成</span>
+      <span class="tag tag-blue" style="margin-left:8px;">生成中</span>
+      <div class="loading-bar" style="width:70px;margin-left:10px;"></div>
+      <span style="margin-left:auto;font-size:11px;color:#2a3f70;">约需 8 秒...</span>
+    </div>`;
+  // Update step nav
+  const n3 = document.getElementById('nav3');
+  n3.style.background = '#0e2218';
+  n3.innerHTML = `<i class="fa fa-check-circle" style="color:#22c55e;font-size:11px;"></i><span style="font-size:11px;color:#22c55e;">3 · 选题方向</span>`;
+  const n4 = document.getElementById('nav4');
+  n4.style.background = '#162040';
+  n4.style.opacity = '1';
+  n4.innerHTML = `<i class="fa fa-circle" style="color:#4f7ef7;font-size:11px;"></i><span style="font-size:11px;color:#4f7ef7;font-weight:500;">4 · 脚本大纲</span>`;
+}
+</script>
+</body>
+</html>
